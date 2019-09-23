@@ -3,7 +3,7 @@ IDIR = ../include
 CC = g++
 CXXFLAGS = -W -Wall -std=c++14 -I$(IDIR)
 
-EDIR = ../exec
+EDIR = ../exec_assembler
 ODIR = ../obj
 
 LIBS = -lm
