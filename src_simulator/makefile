@@ -1,9 +1,9 @@
-IDIR = ../include
+IDIR = ../include_simulator
 
 CC = g++
 CXXFLAGS = -W -Wall -std=c++14 -I$(IDIR)
 
-EDIR = ../exec
+EDIR = ../exec_simulator
 ODIR = ../obj
 
 LIBS = -lm
@@ -18,7 +18,7 @@ OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 $(ODIR)/%.o: %.cpp $(DEPS)
 	$(CC) -c -o $@ $< $(CXXFLAGS) $(DEBUG)
 
-montador: $(OBJ)
+simulador: $(OBJ)
 	$(CC) -o $(EDIR)/$@ $^ $(CXXFLAGS) $(LIBS) $(DEBUG)
 
 .PHONY: clean
