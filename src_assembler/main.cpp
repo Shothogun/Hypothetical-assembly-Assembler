@@ -10,11 +10,11 @@ int main(int argc,char* argv[]) {
   char* source_code_file_name = argv[1];
 
   // Not deleted yet
+  // Creates the Preprocessed file instance, not preprocessed yet
   Preprocessor* preprocessed_file = new Preprocessor(source_code_file_name);
 
-  // Preprocessing
-
+  // Preprocessing of the preprocess file
   preprocessed_file->Preprocessing();
-
+  
   return 0;
 }

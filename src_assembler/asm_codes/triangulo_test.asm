@@ -1,19 +1,33 @@
-	TRIANGULO: EQU 1
+	TRIANGULO: EQU 0
+	_Abobrinhas: EQU 2
+
+
+
+
+  
+		
+
 SECTION TEXT
 		INPUT		B   ; isso aqui é um triangulo
 		INPUT		H
 		LOAD		B
 		MULT		H
-		IF TRIANGULO
+		IF triangulo
 		DIV		DOIS
 		STORE		R
 		OUTPUT	R
 		STOP
 
 
+
+
+			    
+
+
+
 		
 SECTION DATA
-	B:		SPACE
+	b:		sPace
 	H:		SPACE
 	R:		SPACE
-	DOIS:	CONST		2
+	dois:	CONST		2

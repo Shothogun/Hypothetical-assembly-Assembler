@@ -2,6 +2,8 @@
 #define PREPROCESSOR_HPP
 
 #include <regex>
+#include <algorithm>
+#include <string>
 #include <iostream>
 
 
@@ -26,7 +28,16 @@ class Preprocessor{
      */
     void Preprocessing();
   private:
+    //! _preprocessed_file
+    /*! 
+     *  Stores the source code's line in a vector format.
+    */
     std::vector<std::string> _preprocessed_file;
+
+    //! _preprocessed_file
+    /*! 
+     *  Stores all labels and its values declared at the EQU directives
+    */
     std::map<std::string,int> _equ_values;
 
 };
