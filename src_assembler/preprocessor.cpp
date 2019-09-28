@@ -1,7 +1,12 @@
 #include "../include_assembler/preprocessor.hpp"
 
+///////////////////////////////////
+//**   Constructor        
+//////////////////////////////////
 Preprocessor::Preprocessor(char* source_code_name){
    char asm_line_code [300];
+   std::vector<std::string>::iterator it;
+   it = this->_preprocessed_file.begin();
 
   // Source codes are locates in the directory /sources/asm_codes/
   // outside current /exec_assembler/ directory(where the program is executed)
@@ -23,9 +28,40 @@ Preprocessor::Preprocessor(char* source_code_name){
      while (!feof (source_code) ) {
        // Gets 100 characters from the source code line
        if ( fgets (asm_line_code , 100 , source_code) == NULL ) break;
-       fputs(asm_line_code, stdout);
+       
+       // Fills the preprocessed_file vector with the asm source code 
+       it = this->_preprocessed_file.insert(it, asm_line_code);
+
      }
      fclose (source_code);
    }
+
+  for (it=this->_preprocessed_file.begin(); it<this->_preprocessed_file.end(); it++){
+    std::cout << *it;
+  }
+
+}
+
+void Preprocessor::Preprocessing(){
+  std::vector<std::string>::iterator it;
+
+  for (it= this->_preprocessed_file.begin(); it< this->_preprocessed_file.end(); it++){
+    
+    //////////////////////////////////
+    //**   Regex        
+    //////////////////////////////////
+    
+    std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s+(EQU)\\s+(\\d+)");
+
+    ///////////////////////////////////
+    //**   Directives execution        
+    //////////////////////////////////
+
+
+
+    ///////////////////////////////////
+    //**   Comments erasing        
+    //////////////////////////////////
+  }
 
 }

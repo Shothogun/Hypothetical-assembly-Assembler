@@ -12,5 +12,9 @@ int main(int argc,char* argv[]) {
   // Not deleted yet
   Preprocessor* preprocessed_file = new Preprocessor(source_code_file_name);
 
+  // Preprocessing
+
+  preprocessed_file->Preprocessing();
+
   return 0;
 }

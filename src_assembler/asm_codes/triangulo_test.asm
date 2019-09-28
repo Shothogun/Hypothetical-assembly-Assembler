@@ -1,0 +1,19 @@
+	TRIANGULO: EQU 1
+SECTION TEXT
+		INPUT		B   ; isso aqui é um triangulo
+		INPUT		H
+		LOAD		B
+		MULT		H
+		IF TRIANGULO
+		DIV		DOIS
+		STORE		R
+		OUTPUT	R
+		STOP
+
+
+		
+SECTION DATA
+	B:		SPACE
+	H:		SPACE
+	R:		SPACE
+	DOIS:	CONST		2
