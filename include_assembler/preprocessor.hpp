@@ -47,6 +47,13 @@ class Preprocessor{
      *  Stores the source code's line in a vector format.
     */
     std::vector<std::string> _preprocessed_file;
+
+    //! _exists
+    /*! 
+     *  Indicates if the .asm file actually exists. If not,
+     *  the preprocessed file is not produced
+    */
+    bool _exists = false;
 };
 
 

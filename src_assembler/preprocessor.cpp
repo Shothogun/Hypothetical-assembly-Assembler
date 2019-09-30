@@ -24,16 +24,20 @@ Preprocessor::Preprocessor(char* source_code_name){
   FILE* source_code = fopen(char_source_code_name, "r");
   if (source_code == NULL) perror ("Error opening file");
   else {
-     // Until reach end of file
-     while (!feof (source_code) ) {
-       // Gets 100 characters from the source code line
-       if ( fgets (asm_line_code , 100 , source_code) == NULL ) break;
-       
-       // Fills the preprocessed_file vector with the asm source code 
-       it = this->_preprocessed_file.insert(it, asm_line_code);
+    // Indicates that the .asm file really exist,
+    // for further .pre file creation
+    this->_exists = true;
 
-     }
-     fclose (source_code);
+    // Until reach end of file
+    while (!feof (source_code) ) {
+      // Gets 100 characters from the source code line
+      if ( fgets (asm_line_code , 100 , source_code) == NULL ) break;
+      
+      // Fills the preprocessed_file vector with the asm source code 
+      it = this->_preprocessed_file.insert(it, asm_line_code);
+
+    }
+    fclose (source_code);
    }
 
   // Corrects the source code lines order(inserted in the reversed order)
@@ -236,6 +240,11 @@ void Preprocessor::Preprocessing(){
 }
 
 void Preprocessor::MakePreFile(char* source_code_name){
+
+  // If the .asm file doesn't exists, preprocessor shall not 
+  // produce the .pre file
+  if(!this->_exists) return;
+
   // The .pre file will be created in the directory
   // exec_assembler/pre_files/
   std::string string_source_code_name = "./pre_files/";
