@@ -15,6 +15,9 @@ int main(int argc,char* argv[]) {
 
   // Preprocessing of the preprocess file
   preprocessed_file->Preprocessing();
-  
+  preprocessed_file->MakePreFile(source_code_file_name);
+
+  delete preprocessed_file;
+
   return 0;
 }

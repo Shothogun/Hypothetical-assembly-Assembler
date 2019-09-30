@@ -234,3 +234,37 @@ void Preprocessor::Preprocessing(){
   */
 
 }
+
+void Preprocessor::MakePreFile(char* source_code_name){
+  // The .pre file will be created in the directory
+  // exec_assembler/pre_files/
+  std::string string_source_code_name = "./pre_files/";
+
+  // Source code name input at the terminal execution
+  // concatenated with directory
+  string_source_code_name += source_code_name; 
+
+  // Gets the original file name and swap with .pre extention
+  std::regex COPY_regex("(.*)(.asm)");  
+
+  // Get the COPY operator and its operands to format 
+  // to the default pattern(COPY operand_1,operand_2)
+   string_source_code_name = std::regex_replace (string_source_code_name,COPY_regex,"$1.pre");
+
+  // Convert source_code_name string variable to char type
+  char char_source_code_name[string_source_code_name.size() + 1];
+  strcpy(char_source_code_name, string_source_code_name.c_str());
+
+  // Produce the .pre file with the _preprocessed_file vector
+  FILE* pre_file = fopen(char_source_code_name, "w+");
+  if (pre_file == NULL) perror ("Error opening file");
+  std::vector<std::string>::iterator pre_file_line;
+  for(pre_file_line = this->_preprocessed_file.begin();
+      pre_file_line < this->_preprocessed_file.end();
+      pre_file_line++) {
+    
+    fprintf (pre_file, "%s", pre_file_line->c_str() );
+  }
+  fclose(pre_file);
+
+}
