@@ -12,6 +12,7 @@ SECTION TEXT
 		INPUT		H
 		LOAD		B
 		MULT		H
+		COPY		B  	,						H
 		IF triangulo
 		DIV		DOIS
 		STORE		R

@@ -119,9 +119,21 @@ void Preprocessor::Preprocessing(){
     //**   Comments erasing   --------   
     ///////////////////////////////////
 
+    std::regex comments_regex("(;[^].*)");  
+
+    // Gets the comment and erases it(replace by nothing)
+    *source_code_line = std::regex_replace (*source_code_line,comments_regex,"");
+
+
     ///////////////////////////////////
     //**   Ajust COPY operators -------
     ///////////////////////////////////
+
+    std::regex COPY_regex("(COPY)(\\s)(\\w+)(\\s)(,)(\\s)(\\w+)");  
+
+    // Get the COPY operator and its operands to format 
+    // to the default pattern(COPY operand_1,operand_2)
+    *source_code_line = std::regex_replace (*source_code_line,COPY_regex,"$1 $3,$7");
 
     ///////////////////////////////////
     //**   Directives execution -------      
@@ -148,6 +160,15 @@ void Preprocessor::Preprocessing(){
 
       this->_equ_values.insert(std::pair<std::string,int>(label, label_value));
 
+      // Exclude EQU directive line
+      this->_preprocessed_file.erase(source_code_line);
+
+      // After exclude, we should go back to the previous line,
+      // to not pass by the next lines
+      source_code_line--;
+
+      continue;
+
       /* Debug
       std::cout <<  this->_equ_values["TRIANGULO"] << std::endl;
       */
@@ -155,7 +176,6 @@ void Preprocessor::Preprocessing(){
       /* Debug
       for (auto sub_match:matches) std::cout << sub_match << std::endl;
       */
-     continue;
     } // if
     
     //**   IF execution      
@@ -167,7 +187,7 @@ void Preprocessor::Preprocessing(){
     // If a IF directive is found
     if(matched_IF){
       // Matches pattern at the directive EQU:
-      // 0: EQU directive match
+      // 0: IF directive match
       // 1: 'IF'
       // 2: ' '
       // 3: Head from the label name
@@ -206,11 +226,11 @@ void Preprocessor::Preprocessing(){
     } // if
   } // for
 
-  // Degug
+  /* Degug
   std::vector<std::string>::iterator it;
   for (it=this->_preprocessed_file.begin(); it < this->_preprocessed_file.end(); ++it){
   	std::cout << *it;
   }
-  //
+  */
 
 }
