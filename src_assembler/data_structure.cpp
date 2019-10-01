@@ -7,6 +7,8 @@
 
 using namespace std;
 
+// CLASS TABLE
+
 bool table::search(string identifier){
     itr = this->table.find(identifier);
     if(itr != this->table.end()){
@@ -16,6 +18,9 @@ bool table::search(string identifier){
         return false;
     }
 }
+
+
+// CLASS INSTRUCTION_TABLE
 
 instruction_table::instruction_table(){
     this->table["ADD"][OPCODE]  = 1;
@@ -49,6 +54,7 @@ instruction_table::instruction_table(){
 
 }
 
+
 int instruction_table::get_num_operands(string identifier){
     // Check if instruction is in table
     itr = this->table.find(identifier);
@@ -65,6 +71,41 @@ int instruction_table::get_opcode(string identifier){
     itr = this->table.find(identifier);
     if(itr != this->table.end()){
         return table[identifier][OPCODE];
+    }
+    else{
+        return ERROR;
+    }
+}
+
+// CLASS SYMBOL_TABLE
+
+int symbol_table::get_value(string identifier){
+    // Check if symbol is in table
+    itr = this->table.find(identifier);
+    if(itr != this->table.end()){
+        return table[identifier][VALUE];
+    }
+    else{
+        return ERROR;
+    }
+}
+
+bool symbol_table::get_definition(string identifier){
+    // Check if symbol is in table
+    itr = this->table.find(identifier);
+    if(itr != this->table.end()){
+        return (bool)table[identifier][DEF];
+    }
+    else{
+        return false;
+    }
+}
+
+int symbol_table::get_list_address(string identifier){
+    // Check if symbol is in table
+    itr = this->table.find(identifier);
+    if(itr != this->table.end()){
+        return table[identifier][L_ADDRESS];
     }
     else{
         return ERROR;

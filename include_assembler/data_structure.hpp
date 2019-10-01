@@ -33,15 +33,31 @@ public:
 
 // This class creates a symbol table with methods for accessing the value, definition,
 // and address of the undefined symbol list for each symbol in table
-class simbol_table : public table{
+class symbol_table : public table{
 private:
     static const int T_SIZE = 3;
-    static const int VALOR = 0;
+    static const int VALUE = 0;
     static const int DEF = 1;
-    static const int LIST = 2;
+    static const int L_ADDRESS = 2;
     static const int ERROR = -1;
+    map<string, int[T_SIZE]> table;
+    map<string, int[T_SIZE]>::iterator itr;
+
 public:
+
+    void set_value(string identifier, int value){
+        this->table[identifier][VALUE] = value;
+    }
+
+    void set_definition(string identifier, bool value){
+        this->table[identifier][DEF] = (int)value;
+    }
+
+    void set_list_address(string identifier, int address){
+        this->table[identifier][L_ADDRESS] = address;
+    }
+
     int get_value(string identifier);
-    int get_define(string identifier);
-    int get_list(string identifier);
+    bool get_definition(string identifier);
+    int get_list_address(string identifier);
 };
