@@ -9,6 +9,7 @@
 
 SECTION TEXT
 		INPUT		B   ; isso aqui é um triangulo
+	; isso aqui é um triangulo
 		INPUT		H
 		LOAD		B
 		MULT		H

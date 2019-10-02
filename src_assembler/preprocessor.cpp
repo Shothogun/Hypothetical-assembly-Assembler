@@ -120,6 +120,24 @@ void Preprocessor::Preprocessing(){
     *source_code_line = clean_source_code_line;
 
     ///////////////////////////////////
+    //**   Only Comments line erasing -
+    ///////////////////////////////////
+
+    std::regex only_comments_regex("(^\\s*)(;[^].*)");  
+
+    if(std::regex_search (*source_code_line,matches,only_comments_regex)){
+      
+      // Exclude only Comments line
+      this->_preprocessed_file.erase(source_code_line);
+
+      // After exclude, we should go back to the previous line,
+      // to not pass by the next lines
+      source_code_line--;
+
+      continue;
+    }
+
+    ///////////////////////////////////
     //**   Comments erasing   --------   
     ///////////////////////////////////
 
