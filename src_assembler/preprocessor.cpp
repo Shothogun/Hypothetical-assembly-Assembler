@@ -45,6 +45,9 @@ Preprocessor::Preprocessor(char* source_code_name){
                this->_preprocessed_file.end());
 }
 
+///////////////////////////////////
+//**   Preprocessing        
+//////////////////////////////////
 void Preprocessor::Preprocessing(){
 
   // Iterator from the vector. Reference to a string value
@@ -257,6 +260,9 @@ void Preprocessor::Preprocessing(){
 
 }
 
+///////////////////////////////////
+//**   MakePreFile        
+//////////////////////////////////
 void Preprocessor::MakePreFile(char* source_code_name){
 
   // If the .asm file doesn't exists, preprocessor shall not 
@@ -272,11 +278,10 @@ void Preprocessor::MakePreFile(char* source_code_name){
   string_source_code_name += source_code_name; 
 
   // Gets the original file name and swap with .pre extention
-  std::regex COPY_regex("(.*)(.asm)");  
+  std::regex name_regex("(.*)(.asm)");  
 
-  // Get the COPY operator and its operands to format 
-  // to the default pattern(COPY operand_1,operand_2)
-   string_source_code_name = std::regex_replace (string_source_code_name,COPY_regex,"$1.pre");
+  // Replace .asm extention for .pre
+   string_source_code_name = std::regex_replace (string_source_code_name,name_regex,"$1.pre");
 
   // Convert source_code_name string variable to char type
   char char_source_code_name[string_source_code_name.size() + 1];
