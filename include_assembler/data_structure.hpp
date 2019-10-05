@@ -113,7 +113,7 @@ public:
         return this->error_type;
     }
     string get_error_details(){
-        return this->error_details[error_type];
+        return this->error_details[this->error_code];
     }
 };
 

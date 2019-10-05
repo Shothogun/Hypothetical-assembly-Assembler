@@ -115,30 +115,31 @@ int symbol_table::get_list_address(string identifier){
 // CLASS ERROR
 
 map<int, string> error::error_details = {
-    {error::error_00, "Declaração e rótulo ausente."},
-    {error::error_01, "Declaração e rótulo repetido."},
-    {error::error_02, "Pulo para rótulo inválido."},
-    {error::error_03, "Pulo para seção errada."},
-    {error::error_04, "Diretiva inválida."},
-    {error::error_05, "Instrução inválida."},
-    {error::error_06, "Diretiva ou instrução na seção errada."},
-    {error::error_07, "Divisão por zero."},
-    {error::error_08, "Instrução com a quantidade de operandos inválida."},
-    {error::error_09, "Instrução com o tipo de operando inválido."},
-    {error::error_10, "Token inválido."},
-    {error::error_11, "Dois rótulos na mesma linha."},
-    {error::error_12, "Seção TEXT faltante."},
-    {error::error_13, "Seção inválida."},
-    {error::error_14, "Tipo de argumento inválido."},
-    {error::error_15, "Modificação de um valor constante."},
-    {error::error_16, "Acesso a posição não reservada pelo SPACE."}
+    {1000, "Declaração e rótulo ausente."},
+    {2000, "Declaração e rótulo repetido."},
+    {2001, "Pulo para rótulo inválido."},
+    {2002, "Pulo para seção errada."},
+    {1001, "Diretiva inválida."},
+    {1002, "Instrução inválida."},
+    {2003, "Diretiva ou instrução na seção errada."},
+    {2004, "Divisão por zero."},
+    {1003, "Instrução com a quantidade de operandos inválida."},
+    {1004, "Instrução com o tipo de operando inválido."},
+    {0000, "Token inválido."},
+    {1005, "Dois rótulos na mesma linha."},
+    {2005, "Seção TEXT faltante."},
+    {1006, "Seção inválida."},
+    {1007, "Tipo de argumento inválido."},
+    {2006, "Modificação de um valor constante."},
+    {2007, "Acesso a posição não reservada pelo SPACE."}
 };
 
 map<int, string> error::error_types = {
-    {error::SYNTACTIC, "Sintático"},
-    {error::SEMANTIC, "Semantico"},
-    {error::LEXICAL, "Léxico"}
+    {0, "Sintático"},
+    {1, "Semantico"},
+    {2, "Léxico"}
 };
+
 
 error::error(string error_line, int error_line_number, int error_code){
     this->error_line_number = error_line_number;
@@ -152,11 +153,11 @@ error::error(string error_line, int error_line_number, int error_code){
 void error_log::display(int option){
     cout << "Relatório de Erros:" << endl;
     for(itr=error_list.begin(); itr!=error_list.end(); itr++){
-        cout << "Número da linha" << itr->get_error_line_number() << " Tipo: " << 
+        cout << "Número da linha: " << itr->get_error_line_number() << " Tipo: " << 
         itr->error_types[itr->get_error_type()] << endl; 
         if(option == DETAILED){
             cout << "Código: " << itr->get_error_line() << endl;
-            cout << "Detalhes: " << itr->get_error_details << endl;
+            cout << "Detalhes: " << itr->get_error_details() << endl;
         }
     }
 }
