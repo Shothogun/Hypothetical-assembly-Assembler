@@ -61,3 +61,46 @@ public:
     bool get_definition(string identifier);
     int get_list_address(string identifier);
 };
+
+//This class implements the error type and contains the line where the error occurred,
+// a classification (lexical, syntactic and semantic), a error code and the description.
+class error{
+private:
+
+    string error_line;
+    int error_line_number;
+    int error_code;
+    int error_type;
+    static map<int, string> error_details;
+
+public:
+
+    static const int LEXICAL = 0;
+    static const int SYNTACTIC = 1;
+    static const int SEMANTIC = 2;
+
+    static const int error_00 = 0;
+    static const int error_01 = 0;
+    static const int error_02 = 0;
+    static const int error_03 = 0;
+    static const int error_04 = 0;
+    static const int error_05 = 0;
+    static const int error_06 = 0;
+    static const int error_07 = 0;
+    static const int error_08 = 0;
+    static const int error_09 = 0;
+    static const int error_10 = 0;
+    static const int error_11 = 0;
+    static const int error_12 = 0;
+    static const int error_13 = 0;
+    static const int error_14 = 0;
+    static const int error_15 = 0;
+    static const int error_16 = 0;
+
+    error(string error_line, int error_line_number, int error_code);
+    int get_error_line_number();
+    int get_error_code();
+    string get_error_line();
+    int get_error_type();
+    string get_error_details();
+};

@@ -111,3 +111,31 @@ int symbol_table::get_list_address(string identifier){
         return ERROR;
     }
 }
+
+map<int, string> error::error_details = {
+    {error::error_00, "declaração e rótulo ausente"},
+    {error::error_01, "declaração e rótulo repetido"},
+    {error::error_02, "pulo para rótulo inválido"},
+    {error::error_03, "pulo para seção errada"},
+    {error::error_04, "diretiva inválida"},
+    {error::error_05, "instrução inválida"},
+    {error::error_06, "diretiva ou instrução na seção errada"},
+    {error::error_07, "divisão por zero"},
+    {error::error_08, "instrução com a quantidade de operandos inválida"},
+    {error::error_09, "instrução com o tipo de operando inválido"},
+    {error::error_10, "token inválido"},
+    {error::error_11, "dois rótulos na mesma linha"},
+    {error::error_12, "seção TEXT faltante"},
+    {error::error_13, "seção inválida"},
+    {error::error_14, "tipo de argumento inválido"},
+    {error::error_15, "modificação de um valor constante"},
+    {error::error_16, "acesso a posição não reservada pelo SPACE"},
+};
+
+error::error(string error_line, int error_line_number, int error_code){
+    this->error_line_number = error_line_number;
+    this->error_line = error_line;
+    this->error_code = error_code;
+    this->error_type = (int)error_code/1000;
+}
+
