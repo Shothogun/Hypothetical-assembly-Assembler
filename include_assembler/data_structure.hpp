@@ -1,6 +1,7 @@
 #include <string>
 #include <iterator>
 #include <map>
+#include <list>
 using namespace std;
 
 // This class creates a generic table with a search method 
@@ -66,7 +67,7 @@ public:
 // a classification (lexical, syntactic and semantic), a error code and the description.
 class error{
 private:
-
+    static const int ERROR_TYPE_MASK = 1000;
     string error_line;
     int error_line_number;
     int error_code;
@@ -78,29 +79,56 @@ public:
     static const int LEXICAL = 0;
     static const int SYNTACTIC = 1;
     static const int SEMANTIC = 2;
+    static map<int, string> error_types;
 
-    static const int error_00 = 0;
-    static const int error_01 = 0;
-    static const int error_02 = 0;
-    static const int error_03 = 0;
-    static const int error_04 = 0;
-    static const int error_05 = 0;
-    static const int error_06 = 0;
-    static const int error_07 = 0;
-    static const int error_08 = 0;
-    static const int error_09 = 0;
-    static const int error_10 = 0;
-    static const int error_11 = 0;
-    static const int error_12 = 0;
-    static const int error_13 = 0;
-    static const int error_14 = 0;
-    static const int error_15 = 0;
-    static const int error_16 = 0;
+    static const int error_00 = 1000; // syntactic
+    static const int error_01 = 2000; // semantic
+    static const int error_02 = 2001; // semantic
+    static const int error_03 = 2002; // semantic
+    static const int error_04 = 1001; // syntactic
+    static const int error_05 = 1002; // syntactic
+    static const int error_06 = 2003; // semantic
+    static const int error_07 = 2004; // semantic
+    static const int error_08 = 1003; // syntactic
+    static const int error_09 = 1004; // syntactic
+    static const int error_10 = 0000; // lexical
+    static const int error_11 = 1005; // syntactic
+    static const int error_12 = 2005; // semantic
+    static const int error_13 = 1006; // syntactic
+    static const int error_14 = 1007; // syntactic
+    static const int error_15 = 2006; // semantic
+    static const int error_16 = 2007; // semantic
 
     error(string error_line, int error_line_number, int error_code);
-    int get_error_line_number();
-    int get_error_code();
-    string get_error_line();
-    int get_error_type();
-    string get_error_details();
+    int get_error_line_number(){
+        return this->error_line_number;
+    }
+    int get_error_code(){
+        return this->error_code;
+    }
+    string get_error_line(){
+        return this->error_line;
+    }
+    int get_error_type(){
+        return this->error_type;
+    }
+    string get_error_details(){
+        return this->error_details[error_type];
+    }
+};
+
+// This class implements an error log that stores a set of errors 
+// and allows them to be displayed simply or in detail.
+
+class error_log{
+private:
+    list<error> error_list;
+    list<error>::iterator itr;
+public:
+    static const int DETAILED = 1;
+    static const int SIMPLE = 0;
+    void include_error(error error){
+        this->error_list.push_back(error);
+    }
+    void display(int option);
 };
