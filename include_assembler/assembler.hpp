@@ -30,6 +30,25 @@ class Assembler{
     void Assembling();
 
   private:
+    //! SECTION constants identifiers
+    static const int NONE = 0;
+    static const int TEXT = 1;
+    static const int DATA = 2;
+
+    //! GenerateObjCode(std::string instruction, std::string operand1);
+    /*! 
+     *  Produces a regular object code instruction
+     */
+    void GenerateObjCode(std::string instruction, std::string operand1);
+
+    //! GenerateObjCode(std::string instruction, std::string operand1
+    /*!                 std::string operand2);
+     *
+     *  Produces a COPY object code instruction
+     */
+    void GenerateObjCode(std::string instruction, std::string operand1,
+                         std::string operand2);
+
     //! _pre_file
     /*! 
      *  Stores the preprocessed code's line in a vector format.
@@ -47,7 +66,13 @@ class Assembler{
     /*! 
      *  Stores the current section being analised 
     */
-    std::vector<std::string> _section_identifier;
+    int _section_identifier = NONE;
+
+    //! _current_line
+    /*!
+    *   Stores the current line from the preprocessed code
+    */
+    int _current_line = 0;
 };
 
 #endif

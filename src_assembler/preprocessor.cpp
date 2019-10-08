@@ -144,7 +144,7 @@ void Preprocessor::Preprocessing(){
     //**   Comments erasing   --------   
     ///////////////////////////////////
 
-    std::regex comments_regex("(;[^].*)");  
+    std::regex comments_regex("(\\s*)(;[^].*)");  
 
     // Gets the comment and erases it(replace by nothing)
     *source_code_line = std::regex_replace (*source_code_line,comments_regex,"");
@@ -152,7 +152,7 @@ void Preprocessor::Preprocessing(){
     ///////////////////////////////////
     //**   Ajust Label+Number pattern
     ///////////////////////////////////
-    std::regex sum_label_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(\\s*)(\\+)(\\s*)(\\d+)");  
+    std::regex sum_label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(\\s*)(\\+)(\\s*)(\\d+)");  
 
     // Get the sum between label and number offset and dispose them
     // without space
@@ -174,7 +174,7 @@ void Preprocessor::Preprocessing(){
 
     //**   EQU execution     
 
-    std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s+(EQU)\\s+(\\d+)");
+    std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)\\s+(EQU)\\s+(\\d+)");
 
     // Seeks the EQU directive match
     matched_EQU = std::regex_search (*source_code_line,matches,EQU_expression_regex);
@@ -212,7 +212,7 @@ void Preprocessor::Preprocessing(){
     } // if
     
     //**   IF execution      
-    std::regex IF_expression_regex("(IF)(\\s)([a-z]|[A-Z]|_)(\\w+|\\d+)");
+    std::regex IF_expression_regex("(IF)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)");
 
     // Seeks the EQU directive match
     matched_IF = std::regex_search (*source_code_line,matches,IF_expression_regex);
