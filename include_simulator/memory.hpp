@@ -21,8 +21,10 @@ extern int16_t ACC;
 
 // This function will read each byte from the object file
 // and fill the memory with it
+//! LoadProgram function
 void LoadProgram(std::string object_code);
 
+//! fetch_execute_cycle function
 void fetch_execute_cycle();
 
 #endif

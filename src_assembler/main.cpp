@@ -1,36 +1,25 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include "../include_assembler/preprocessor.hpp"
 
 
 using namespace std;
 
 int main(int argc,char* argv[]) {
-  char asm_line_code [100];
+  char* source_code_file_name = argv[1];
 
-  // Source codes are locates in the directory /sources/asm_codes/
-  // outside current /exec_assembler/ directory(where the program is executed)
-  string string_source_code_name = "../src_assembler/asm_codes/";
+  // Not deleted yet
+  // Creates the Preprocessed file instance, not preprocessed yet
+  Preprocessor* preprocessed_file = new Preprocessor(source_code_file_name);
 
-  // Source code name input at the terminal execution
-  // concatenated with directory
-  string_source_code_name += argv[1];
+  // Preprocessing of the preprocess file
+  preprocessed_file->Preprocessing();
 
-  // Convert source_code_name string variable to char type
-  char char_source_code_name[string_source_code_name.size() + 1];
-  strcpy(char_source_code_name, string_source_code_name.c_str());
+  // Produces the Preprocessed file "*.pre"
+  preprocessed_file->MakePreFile(source_code_file_name);
 
-  // Open the chosen source code file
-  FILE* source_code = fopen(char_source_code_name, "r");
-  if (source_code == NULL) perror ("Error opening file");
-  else {
-     // Until reach end of file
-     while (!feof (source_code) ) {
-       // Gets 100 characters from the source code line
-       if ( fgets (asm_line_code , 100 , source_code) == NULL ) break;
-     }
-     fclose (source_code);
-   }
+  delete preprocessed_file;
 
   return 0;
 }
