@@ -1,4 +1,4 @@
-	TRIANGULO: EQU 0
+	TRIANGULO: EQU 1
 	_Abobrinhas: EQU 2
 
 
@@ -15,7 +15,7 @@ SECTION TEXT
 		MULT		H
 		COPY		B  	,						H
 		IF triangulo
-		DIV		DOIS
+		DIV		DOIS +						2
 		STORE		R
 		OUTPUT	R
 		STOP

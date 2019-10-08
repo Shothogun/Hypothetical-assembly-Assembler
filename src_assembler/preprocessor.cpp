@@ -146,6 +146,14 @@ void Preprocessor::Preprocessing(){
     // Gets the comment and erases it(replace by nothing)
     *source_code_line = std::regex_replace (*source_code_line,comments_regex,"");
 
+    ///////////////////////////////////
+    //**   Ajust Label+Number pattern
+    ///////////////////////////////////
+    std::regex sum_label_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(\\s*)(\\+)(\\s*)(\\d+)");  
+
+    // Get the sum between label and number offset and dispose them
+    // without space
+    *source_code_line = std::regex_replace (*source_code_line,sum_label_regex,"$1$2$4$6");
 
     ///////////////////////////////////
     //**   Ajust COPY operators -------
