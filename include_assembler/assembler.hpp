@@ -35,6 +35,19 @@ class Assembler{
     static const int TEXT = 1;
     static const int DATA = 2;
 
+    //! Instructions and directives types identifiers
+    // Instructions
+    static const int REGULAR_TYPE   = 10;
+    static const int COPY_TYPE      = 11;
+    static const int STOP_TYPE      = 12;
+
+    // Directives
+    static const int SPACE_TYPE     = 20;
+    static const int CONST_TYPE     = 21;
+
+    // SECTION
+    static const int SECTION_TYPE     = 30;
+
     //! GenerateObjCode(std::string instruction, std::string operand1);
     /*! 
      *  Produces a regular object code instruction
@@ -67,6 +80,14 @@ class Assembler{
      *  Stores the current section being analised 
     */
     int _section_identifier = NONE;
+
+    //! _line_type_identifier
+    /*! 
+     *  Indicates if it's a instruction or directive
+     *  and what kind of it is
+    */
+    int _line_type_identifier = REGULAR_TYPE;
+
 
     //! _current_line
     /*!
