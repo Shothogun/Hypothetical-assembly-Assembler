@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include "../include_assembler/data_structure.hpp"
 
 
 /*!
@@ -54,6 +55,12 @@ class Preprocessor{
      *  the preprocessed file is not produced
     */
     bool _exists = false;
+    //! _preprocessing_errors 
+    /*!
+     *
+     * 
+    */
+    error_log _preprocessing_errors;
 };
 
 
