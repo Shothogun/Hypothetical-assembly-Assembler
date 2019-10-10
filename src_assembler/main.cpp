@@ -22,7 +22,10 @@ int main(int argc,char* argv[]) {
 
   // Creates the Assembler instance, ready to compile the .pre file
   Assembler* assembler = new Assembler(source_code_file_name);
+
   assembler->Assembling();
+
+  assembler->MakeObjectFile(source_code_file_name);
 
   delete preprocessed_file;
   delete assembler;

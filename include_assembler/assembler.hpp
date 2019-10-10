@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include "data_structure.hpp"
 
 /*!
  * Assembler class
@@ -22,6 +23,13 @@ class Assembler{
      */
     Assembler(char* preprocessed_code_name);
 
+    //! ~Assembler();
+    /*! 
+     *  A class destructor
+     */
+    ~Assembler();
+
+
     //! Assembling();
     /*! 
      *  Executes the assembling, running the preprocess directives and 
@@ -29,13 +37,20 @@ class Assembler{
      */
     void Assembling();
 
+    //! MakeObjectFile(char* source_code_name);
+    /*! 
+     * Produces the .obj file whose content is stored in _object_file
+     * variable
+     */
+    void MakeObjectFile(char* source_code_name);
+
   private:
     //! SECTION constants identifiers
     static const int NONE = 0;
     static const int TEXT = 1;
     static const int DATA = 2;
 
-    //! Instructions and directives types identifiers
+    // Instructions and directives types identifiers
     // Instructions
     static const int REGULAR_TYPE   = 10;
     static const int COPY_TYPE      = 11;
@@ -47,6 +62,28 @@ class Assembler{
 
     // SECTION
     static const int SECTION_TYPE     = 30;
+
+    // ERROR Code
+    static const int ERROR = -1;
+
+    //! Instruction table to object code generation
+    instruction_table* _instruction_table;
+
+    //! Symbol table 
+    symbol_table* _symbol_table;
+
+    //! _exists
+    /*! 
+     *  Indicates if the .asm file actually exists. If not,
+     *  the object file is not produced
+    */
+    bool _exists = false;
+
+    //! GenerateObjCode(std::string instruction);
+    /*! 
+     *  Produces a STOP object code instruction
+     */
+    void GenerateObjCode(std::string instruction);
 
     //! GenerateObjCode(std::string instruction, std::string operand1);
     /*! 
@@ -62,18 +99,47 @@ class Assembler{
     void GenerateObjCode(std::string instruction, std::string operand1,
                          std::string operand2);
 
+    //! IdentifyCommandType();
+    /*
+     *  Associate the command with his type and creates
+     *  his object machine code equivalent
+     */
+    void IdentifyCommandType();
+
     //! _pre_file
     /*! 
      *  Stores the preprocessed code's line in a vector format.
     */
     std::vector<std::string> _pre_file;
 
-    //! _pre_file
+    //! _object_file
     /*! 
      *  Stores the object file's line in a vector format,
      *  containing the machine code instructions.
     */
     std::vector<std::string> _object_file;
+
+
+
+    //! _instruction_operator
+    /*! 
+     *  Stores the command operator from preprocessed line instruction
+    */
+    std::string _instruction_operator;
+
+    //! _instruction_operand_1
+    /*! 
+     *  Stores the command first operand from 
+     *  preprocessed line instruction
+    */
+    std::string _instruction_operand_1;
+
+    //! _instruction_operand_2
+    /*! 
+     *  Stores the command second operator 
+     *  from preprocessed line instruction
+    */
+    std::string _instruction_operand_2;
 
     //! _section_identifier
     /*! 

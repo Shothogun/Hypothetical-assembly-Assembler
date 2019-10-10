@@ -8,6 +8,10 @@ Assembler::Assembler(char* preprocessed_code_name){
   std::vector<std::string>::iterator it;
   it = this->_pre_file.begin();
 
+  // Tables initialization
+  this->_instruction_table = new instruction_table();
+  this->_symbol_table = new symbol_table();
+
   // Gets the original file name and swap with .pre extention
   std::regex name_regex("(.*)(.asm)");  
 
@@ -29,6 +33,10 @@ Assembler::Assembler(char* preprocessed_code_name){
   FILE* preprocessed_code = fopen(char_object_code_name, "r");
   if (preprocessed_code == NULL) perror ("Error opening file");
   else {
+    // Indicates that the .pre file really exist,
+    // for further .obj file creation
+    this->_exists = true;
+
     // Until reach end of file
     while (!feof (preprocessed_code) ) {
       // Gets 100 characters from the source code line
@@ -49,6 +57,13 @@ Assembler::Assembler(char* preprocessed_code_name){
     std::cout << *it ;
   }
   */
+}
+
+///////////////////////////////////
+//**   Destructor        
+//////////////////////////////////
+Assembler::~Assembler(){
+  delete this->_instruction_table;
 }
 
 ///////////////////////////////////
@@ -83,29 +98,8 @@ void Assembler::Assembling(){
   // Indicates that is a CONST directive
   bool is_a_CONST_directive = false;
 
-  // Const value stored in the label
-  // at CONST directives
-  int CONST_number = 0;
-
   // Array composed by the matches found in the regex search
   std::smatch matches;
-
-  // Equivalent to the operator from the code's line
-  // instructions
-  std::string instruction_operator;
-
-  // Equivalent to the operator from the code's line
-  // directives
-  std::string directive_operator;
-
-  // Equivalent to the operator from the code's line
-  // instructions
-  std::string instruction_operand;
-
-  // Equivalent to the operator from the COPY's
-  // instructions
-  std::string instruction_operand_1;
-  std::string instruction_operand_2;
 
   // String representing the label being stored
   // in the SPACE directive
@@ -198,8 +192,8 @@ void Assembler::Assembling(){
       // 3: Head character from the label
       // 4: Tail from the label
 
-      instruction_operator = matches[1].str();
-      instruction_operand = matches[3].str() + matches[4].str();
+      this->_instruction_operator = matches[1].str();
+      this->_instruction_operand_1 = matches[3].str() + matches[4].str();
 
       // Indicates the line's command kind
       this->_line_type_identifier = REGULAR_TYPE;
@@ -223,9 +217,9 @@ void Assembler::Assembling(){
       // 4: comma ',' character
       // 5: operand 2
 
-      instruction_operator = matches[1].str();
-      instruction_operand_1 = matches[3].str();
-      instruction_operand_2 = matches[5].str();
+      this->_instruction_operator = matches[1].str();
+      this->_instruction_operand_1 = matches[3].str();
+      this->_instruction_operand_2 = matches[5].str();
 
       // Indicates the line's command kind
       this->_line_type_identifier = COPY_TYPE;
@@ -245,7 +239,7 @@ void Assembler::Assembling(){
       // Matches pattern at instruction STOP:
       // 0: Instruction STOP match
 
-      instruction_operator = matches[0].str();
+      this->_instruction_operator = matches[0].str();
 
       // Indicates the line's command kind
       this->_line_type_identifier = STOP_TYPE;
@@ -255,7 +249,7 @@ void Assembler::Assembling(){
     //**   Identify SPACE directive --------------
     //////////////////////////////////////////////
     
-    std::regex SPACE_directive_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:\\s)(SPACE)");
+    std::regex SPACE_directive_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:\\s)(SPACE)(\\s*)(\\d*)");
 
     // Seek the instruction match
     is_a_SPACE_directive = std::regex_search (*preprocessed_code_line,
@@ -268,12 +262,20 @@ void Assembler::Assembling(){
       // 2: Tail from the label
       // 3: ':' plus space character 
       // 4: SPACE
+      // 6: A number
 
-      SPACE_label = matches[1].str() + matches[2].str();
-      directive_operator = matches[4].str();
+      this->_instruction_operand_1 = matches[1].str() + matches[2].str();
+      this->_instruction_operator = matches[4].str();
+      this->_instruction_operand_2 = matches[6].str();
 
       // Indicates the line's command kind
       this->_line_type_identifier = SPACE_TYPE;
+
+      /* Debug
+      std::cout<< "Label    : " << this->_instruction_operand_1 << std::endl;
+      std::cout<< "Directive: " << this->_instruction_operator << std::endl;
+      std::cout<< "Number   : " << this->_instruction_operand_2 << std::endl;
+      */
     }  
 
     //////////////////////////////////////////////
@@ -296,19 +298,19 @@ void Assembler::Assembling(){
       // 5: Space character
       // 6: A number
 
-      CONST_label = matches[1].str() + matches[2].str();
-      directive_operator = matches[4].str();
-      CONST_number = stoi(matches[6].str());
+      this->_instruction_operand_1  = matches[1].str() + matches[2].str();
+      this->_instruction_operator = matches[4].str();
+      this->_instruction_operand_2 = stoi(matches[6].str());
 
       // Indicates the line's command kind
       this->_line_type_identifier = CONST_TYPE;
 
       /* Debug
-      std::cout<< "Label    : " << CONST_label<< std::endl;
-      std::cout<< "Directive: " << directive_operator << std::endl;
-      std::cout<< "Numbber  : " << CONST_number<< std::endl;
+      std::cout<< "Label    : " << this->_instruction_operand_1 << std::endl;
+      std::cout<< "Directive: " << this->_instruction_operator << std::endl;
+      std::cout<< "Numbber  : " << this->_instruction_operand_2 << std::endl;
       */
-    }  
+    } 
 
 
     //////////////////////////////////////////////
@@ -318,10 +320,179 @@ void Assembler::Assembling(){
     //////////////////////////////////////////////
     //**   Produce the machine code --------------
     //////////////////////////////////////////////
-
+    
+    IdentifyCommandType();
 
   /* Debug
   std::cout << *preprocessed_code_line;
   */ 
+
+  } // for 
+
+ 
+  // Corrects the object code lines order(inserted in the reversed order)
+  std::reverse(this->_object_file.begin(),
+               this->_object_file.end()); 
+}
+
+void Assembler::IdentifyCommandType(){
+  switch (this->_line_type_identifier){
+    case REGULAR_TYPE:
+      GenerateObjCode(this->_instruction_operator,
+                      this->_instruction_operand_1);
+      break;
+
+    case COPY_TYPE:
+      GenerateObjCode(this->_instruction_operator,
+                this->_instruction_operand_1,
+                this->_instruction_operand_2);
+      break;
+
+    case STOP_TYPE:
+      GenerateObjCode(this->_instruction_operator);
+      break;
+      
+    case SPACE_TYPE:
+      //! this->_instruction_operand_1: Label
+      //! this->_instruction_operand_2: Alloc Size
+      GenerateObjCode(this->_instruction_operator,
+            this->_instruction_operand_1,
+            this->_instruction_operand_2);
+      break;
+
+    case CONST_TYPE:
+      //! this->_instruction_operand_1: Label
+      //! this->_instruction_operand_2: Const value
+      GenerateObjCode(this->_instruction_operator,
+            this->_instruction_operand_1,
+            this->_instruction_operand_2);
+      break;
+
+    case SECTION_TYPE:
+      break;
+
+    default:
+      break;
   }
+      
+}
+
+void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
+                                std::string operand2) {
+    //////////////////////////////////////////////
+    //**   Generate machine code -----------------
+    //////////////////////////////////////////////
+    // There's a equivalent instruciton at the 
+    // instruction table
+    int opcode = this->_instruction_table->get_opcode(instruction);
+    if(opcode != ERROR){
+      this->_object_file.insert(this->_object_file.begin(), 
+                                to_string(opcode)); 
+
+      //////////////////////////////////////////////
+      //**   Resolver os símbolos ------------------
+      //////////////////////////////////////////////
+
+      // Debug
+      this->_object_file.insert(this->_object_file.begin(), 
+                                "-1"); 
+      this->_object_file.insert(this->_object_file.begin(), 
+                                "-1"); 
+      //
+
+    }
+
+    //////////////////////////////////////////////
+    //**   If none instruction corresponds --------
+    //////////////////////////////////////////////
+}
+
+void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
+    //////////////////////////////////////////////
+    //**   Generate machine code -----------------
+    //////////////////////////////////////////////
+    // There's a equivalent instruciton at the 
+    // instruction table
+    int opcode = this->_instruction_table->get_opcode(instruction);
+    if(opcode != ERROR){
+      this->_object_file.insert(this->_object_file.begin(), 
+                                to_string(opcode)); 
+
+      //////////////////////////////////////////////
+      //**   Resolver os símbolos ------------------
+      //////////////////////////////////////////////
+
+      // Debug
+      this->_object_file.insert(this->_object_file.begin(), 
+                                "-1"); 
+      //
+
+    }
+
+    //////////////////////////////////////////////
+    //**   If none instruction corresponds --------
+    //////////////////////////////////////////////
+}
+
+void Assembler::GenerateObjCode(std::string instruction) {
+    //////////////////////////////////////////////
+    //**   Generate machine code -----------------
+    //////////////////////////////////////////////
+    // There's a equivalent instruciton at the 
+    // instruction table
+    int opcode = this->_instruction_table->get_opcode(instruction);
+    if(opcode != ERROR){
+      this->_object_file.insert(this->_object_file.begin(), 
+                                to_string(opcode)); 
+
+      //////////////////////////////////////////////
+      //**   Resolver os símbolos ------------------
+      //////////////////////////////////////////////
+
+    }
+
+    //////////////////////////////////////////////
+    //**   If none instruction corresponds --------
+    //////////////////////////////////////////////    
+}
+
+///////////////////////////////////
+//**   MakePreFile        
+//////////////////////////////////
+void Assembler::MakeObjectFile(char* source_code_name){
+
+  // If the .pre file doesn't exists, assemlber shall not 
+  // produce the .object file
+  if(!this->_exists) return;
+
+  // The .obj file will be created in the directory
+  // exec_assembler/obj_files/
+  std::string string_source_code_name = "./obj_files/";
+
+  // Source code name input at the terminal execution
+  // concatenated with directory
+  string_source_code_name += source_code_name; 
+
+  // Gets the original file name and swap with .obj extention
+  std::regex name_regex("(.*)(.asm)");  
+
+  // Replace .pre extention for .obj
+   string_source_code_name = std::regex_replace (string_source_code_name,name_regex,"$1.obj");
+
+  // Convert source_code_name string variable to char type
+  char char_source_code_name[string_source_code_name.size() + 1];
+  strcpy(char_source_code_name, string_source_code_name.c_str());
+
+  // Produce the .obj file with the _object_file vector
+  FILE* pre_file = fopen(char_source_code_name, "w+");
+  if (pre_file == NULL) perror ("Error opening file");
+  std::vector<std::string>::iterator object_file_line;
+  for(object_file_line = this->_object_file.begin();
+      object_file_line < this->_object_file.end();
+      object_file_line++) {
+    
+    fprintf (pre_file, "%s ", object_file_line->c_str() );
+  }
+  fclose(pre_file);
+
 }
