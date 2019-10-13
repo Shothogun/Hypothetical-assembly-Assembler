@@ -120,6 +120,15 @@ class Assembler{
     std::vector<std::string> _object_file;
 
 
+    //! _section_data_commands
+    /*! 
+     *  Stores the preprocessed code's section data
+     *  in machine code's version. This is appended
+     *  to the object file at the its ending.
+    */
+    std::vector<std::string> _section_data_commands;
+
+
 
     //! _instruction_operator
     /*! 

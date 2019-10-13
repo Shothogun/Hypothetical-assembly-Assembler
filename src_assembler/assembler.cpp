@@ -74,6 +74,9 @@ void Assembler::Assembling(){
   // Preprocesseed code's line iterated
   std::vector<std::string>::iterator preprocessed_code_line;
 
+  // SECTION DATA code's line iterated
+  std::vector<std::string>::iterator section_data_values;
+
   // Boolean value that express SECTION TEXT
   // detection at the code line
   bool is_a_SECTION_TEXT = false;
@@ -115,6 +118,10 @@ void Assembler::Assembling(){
   for(preprocessed_code_line = this->_pre_file.begin();
       preprocessed_code_line < this->_pre_file.end();
       preprocessed_code_line++) {    
+                            
+                        //////////////////////////////////////////////
+                        //**   Separate elements from line
+                        //////////////////////////////////////////////
 
     is_a_regular_instruction = false;
     is_a_COPY_instruction = false;
@@ -300,7 +307,7 @@ void Assembler::Assembling(){
 
       this->_instruction_operand_1  = matches[1].str() + matches[2].str();
       this->_instruction_operator = matches[4].str();
-      this->_instruction_operand_2 = stoi(matches[6].str());
+      this->_instruction_operand_2 = matches[6].str();
 
       // Indicates the line's command kind
       this->_line_type_identifier = CONST_TYPE;
@@ -308,18 +315,18 @@ void Assembler::Assembling(){
       /* Debug
       std::cout<< "Label    : " << this->_instruction_operand_1 << std::endl;
       std::cout<< "Directive: " << this->_instruction_operator << std::endl;
-      std::cout<< "Numbber  : " << this->_instruction_operand_2 << std::endl;
+      std::cout<< "Number  : " << this->_instruction_operand_2 << std::endl;
       */
     } 
 
 
-    //////////////////////////////////////////////
-    //**   ERROR verify --------------------------
-    //////////////////////////////////////////////
+                        //////////////////////////////////////////////
+                        //**   ERROR verify --------------------------
+                        //////////////////////////////////////////////
 
-    //////////////////////////////////////////////
-    //**   Produce the machine code --------------
-    //////////////////////////////////////////////
+                        //////////////////////////////////////////////
+                        //**   Produce the machine code --------------
+                        //////////////////////////////////////////////
     
     IdentifyCommandType();
 
@@ -329,6 +336,21 @@ void Assembler::Assembling(){
 
   } // for 
 
+                        //////////////////////////////////////////////
+                        //**   Append SECTION DATA in object file-----
+                        //////////////////////////////////////////////
+
+  // Corrects the SECTION DATA lines order(inserted in the reversed order)
+  std::reverse(this->_section_data_commands.begin(),
+               this->_section_data_commands.end()); 
+
+  for(section_data_values = this->_section_data_commands.begin();
+      section_data_values < this->_section_data_commands.end();
+      section_data_values++) {
+
+    this->_object_file.insert(this->_object_file.begin(), 
+                              *section_data_values); 
+  }
  
   // Corrects the object code lines order(inserted in the reversed order)
   std::reverse(this->_object_file.begin(),
@@ -384,13 +406,18 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
     //////////////////////////////////////////////
     // There's a equivalent instruciton at the 
     // instruction table
+
     int opcode = this->_instruction_table->get_opcode(instruction);
-    if(opcode != ERROR){
+    int label_const_value,i;
+    int space_size;
+
+    // Command located in section type and opcode found
+    if(this->_section_identifier == TEXT && opcode != ERROR){
       this->_object_file.insert(this->_object_file.begin(), 
                                 to_string(opcode)); 
 
       //////////////////////////////////////////////
-      //**   Resolver os símbolos ------------------
+      //**   Labels identify -----------------------
       //////////////////////////////////////////////
 
       // Debug
@@ -402,8 +429,43 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
     }
 
+    // Command located in DATA type and opcode not found, 
+    // that means a directive
+    else if(this->_section_identifier == DATA && opcode == ERROR){
+      switch (this->_line_type_identifier)
+      {
+      case SPACE_TYPE:
+        // LABEL: SPACE
+        // SPACE equals 1 predefined
+        if(_instruction_operand_2.compare("") == 0){
+          space_size = 1;
+        }
+
+        // LABEL: SPACE %NUMBER%
+        // Alocates NUMBER amount space
+        else {
+          space_size = stoi(this->_instruction_operand_2);
+        }
+
+        for(i=0; i < space_size; i++){
+          this->_section_data_commands.insert(this->_section_data_commands.begin(), 
+                        "00"); 
+        }
+        break;
+
+      case CONST_TYPE:
+        label_const_value = stoi(this->_instruction_operand_2);
+        this->_section_data_commands.insert(this->_section_data_commands.begin(), 
+                                to_string(label_const_value)); 
+        break;
+      
+      default:
+        break;
+      }
+    }
+
     //////////////////////////////////////////////
-    //**   If none instruction corresponds --------
+    //**   ERROR case ----------------------------
     //////////////////////////////////////////////
 }
 
@@ -411,7 +473,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
     //////////////////////////////////////////////
     //**   Generate machine code -----------------
     //////////////////////////////////////////////
-    // There's a equivalent instruciton at the 
+
+    // There's a equivalent instruction at the 
     // instruction table
     int opcode = this->_instruction_table->get_opcode(instruction);
     if(opcode != ERROR){
@@ -419,7 +482,7 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
                                 to_string(opcode)); 
 
       //////////////////////////////////////////////
-      //**   Resolver os símbolos ------------------
+      //**   Identify label ------------------------
       //////////////////////////////////////////////
 
       // Debug
@@ -446,7 +509,7 @@ void Assembler::GenerateObjCode(std::string instruction) {
                                 to_string(opcode)); 
 
       //////////////////////////////////////////////
-      //**   Resolver os símbolos ------------------
+      //**   Identify label ------------------------
       //////////////////////////////////////////////
 
     }
