@@ -43,12 +43,6 @@ class Preprocessor{
     */
     std::map<std::string,int> _equ_values;
 
-    //! _preprocessed_file
-    /*! 
-     *  Stores the source code's line in a vector format.
-    */
-    std::vector<std::string> _preprocessed_file;
-
     //! _exists
     /*! 
      *  Indicates if the .asm file actually exists. If not,
@@ -61,6 +55,13 @@ class Preprocessor{
      * 
     */
     error_log _preprocessing_errors;
+
+    //! _preprocessed_file
+    /*! 
+     *  Stores the source code's line in a vector format.
+     *  After, turns into the preprocessed file
+    */
+    std::vector<std::string> _preprocessed_file;
 };
 
 

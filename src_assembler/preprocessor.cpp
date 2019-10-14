@@ -46,6 +46,9 @@ Preprocessor::Preprocessor(char* source_code_name){
                this->_preprocessed_file.end());
 }
 
+///////////////////////////////////
+//**   Preprocessing        
+//////////////////////////////////
 void Preprocessor::Preprocessing(){
 
   // Iterator from the vector. Reference to a string value
@@ -145,7 +148,7 @@ void Preprocessor::Preprocessing(){
     //**   Comments erasing   --------   
     ///////////////////////////////////
 
-    std::regex comments_regex("(;[^].*)");  
+    std::regex comments_regex("(\\s*)(;[^].*)");  
 
     // Gets the comment and erases it(replace by nothing)
     *source_code_line = std::regex_replace (*source_code_line,comments_regex,"");
@@ -153,7 +156,7 @@ void Preprocessor::Preprocessing(){
     ///////////////////////////////////
     //**   Ajust Label+Number pattern
     ///////////////////////////////////
-    std::regex sum_label_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(\\s*)(\\+)(\\s*)(\\d+)");  
+    std::regex sum_label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(\\s*)(\\+)(\\s*)(\\d+)");  
 
     // Get the sum between label and number offset and dispose them
     // without space
@@ -266,6 +269,7 @@ void Preprocessor::Preprocessing(){
     }
     //**   EQU execution     
 
+<<<<<<< HEAD
     //CASE 1: EQU with two label on the same line
 
     std::regex EQU_two_labels("(((^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s*){2,})\\s+(EQU)\\s+(\\d+)");
@@ -303,6 +307,9 @@ void Preprocessor::Preprocessing(){
 
     std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s+(EQU)\\s+(\\d+)");
     
+=======
+    std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)\\s+(EQU)\\s+(\\d+)");
+>>>>>>> 36adf5d538d79b879d4e342885199a2b400ef8ec
 
     // Seeks the EQU directive match
     matched_EQU = std::regex_search (*source_code_line,matches,EQU_expression_regex);
@@ -418,7 +425,7 @@ void Preprocessor::Preprocessing(){
     }
     
     //**   IF execution      
-    std::regex IF_expression_regex("(IF)(\\s)([a-z]|[A-Z]|_)(\\w+|\\d+)");
+    std::regex IF_expression_regex("(IF)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)");
 
     // Seeks the EQU directive match
     matched_IF = std::regex_search (*source_code_line,matches,IF_expression_regex);
@@ -487,6 +494,9 @@ void Preprocessor::Preprocessing(){
 
 }
 
+///////////////////////////////////
+//**   MakePreFile        
+//////////////////////////////////
 void Preprocessor::MakePreFile(char* source_code_name){
 
   // If the .asm file doesn't exists, preprocessor shall not 
@@ -502,11 +512,10 @@ void Preprocessor::MakePreFile(char* source_code_name){
   string_source_code_name += source_code_name; 
 
   // Gets the original file name and swap with .pre extention
-  std::regex COPY_regex("(.*)(.asm)");  
+  std::regex name_regex("(.*)(.asm)");  
 
-  // Get the COPY operator and its operands to format 
-  // to the default pattern(COPY operand_1,operand_2)
-   string_source_code_name = std::regex_replace (string_source_code_name,COPY_regex,"$1.pre");
+  // Replace .asm extention for .pre
+   string_source_code_name = std::regex_replace (string_source_code_name,name_regex,"$1.pre");
 
   // Convert source_code_name string variable to char type
   char char_source_code_name[string_source_code_name.size() + 1];

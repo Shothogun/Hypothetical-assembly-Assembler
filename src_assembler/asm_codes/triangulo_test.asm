@@ -30,6 +30,6 @@ SECTION TEXT
 		
 SECTION DATA
 	b:		sPace
-	H:		SPACE
+	H:		SPACE 		2
 	R:		SPACE
 	dois:	CONST		2
