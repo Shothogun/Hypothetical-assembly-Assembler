@@ -60,7 +60,7 @@ void Preprocessor::Preprocessing(){
   int label_value_IF_condition;
 
   // Line number in file;
-  int line_number;
+  int line_counter;
 
   // Elements from Directives command
   std::string label;
@@ -74,9 +74,9 @@ void Preprocessor::Preprocessing(){
   std::string clean_source_code_line;
 
   // Iterates each line from source code(not processed yet)
-  for (source_code_line = this->_preprocessed_file.begin();
+  for (source_code_line = this->_preprocessed_file.begin(), line_counter=1;
        source_code_line < this->_preprocessed_file.end();
-       source_code_line++){
+       source_code_line++, line_counter++){
 
     //////////////////////////////////
     //**   Unsesitive case filter ---
@@ -188,8 +188,8 @@ void Preprocessor::Preprocessing(){
         if((*itr!= "EQU") && (*itr!="IF") && (*itr!="")){
           strn = *itr;
           if(!std::regex_match(strn, matches, valid_token)){
-            line_number = distance(_preprocessed_file.begin(), source_code_line);
-            error error(*source_code_line, line_number, error::error_10);
+            
+            error error(*source_code_line, line_counter, error::error_10);
             _preprocessing_errors.include_error(error);
             if(source_code_line == _preprocessed_file.begin()){
               matched_label = 0;
@@ -223,8 +223,8 @@ void Preprocessor::Preprocessing(){
     matched_EQU = std::regex_search (*source_code_line,matches,EQU);
     number = matches[3].str();
     if(matched_EQU && !std::regex_match(number, matches , regex_number)){
-      line_number = distance(_preprocessed_file.begin(), source_code_line);
-      error error(*source_code_line, line_number, error::error_14);
+      
+      error error(*source_code_line, line_counter, error::error_14);
       _preprocessing_errors.include_error(error);
       
       if(source_code_line == _preprocessed_file.begin()){
@@ -247,8 +247,8 @@ void Preprocessor::Preprocessing(){
     matched_IF = std::regex_search (*source_code_line,matches,IF);
     label = matches[3].str();
     if(matched_IF && !std::regex_match(label, matches , regex_label)){
-      line_number = distance(_preprocessed_file.begin(), source_code_line);
-      error error(*source_code_line, line_number, error::error_14);
+      
+      error error(*source_code_line, line_counter, error::error_14);
       _preprocessing_errors.include_error(error);
       if(source_code_line == _preprocessed_file.begin()){
         matched_label = 0;
@@ -284,8 +284,8 @@ void Preprocessor::Preprocessing(){
 
       label = matches[3].str() + matches[4].str();
       label_value = stoi(matches[7]);
-      line_number = distance(_preprocessed_file.begin(), source_code_line);
-      error error(*source_code_line, line_number, error::error_11);
+      
+      error error(*source_code_line, line_counter, error::error_11);
       _preprocessing_errors.include_error(error);
 
       this->_equ_values.insert(std::pair<std::string,int>(label, label_value)); 
@@ -319,7 +319,7 @@ void Preprocessor::Preprocessing(){
   
       label = matches[1].str() + matches[2].str();
       label_value = stoi(matches[5]);
-      line_number = distance(_preprocessed_file.begin(), source_code_line);
+      
 
       // Search the label on the previous line
       if(source_code_line == _preprocessed_file.begin()){
@@ -336,13 +336,13 @@ void Preprocessor::Preprocessing(){
       // If the previous line contained one label, notify two labels error
       // and only considers the last label
       if(matched_label){
-        error error(*source_code_line, line_number, error::error_11);
+        error error(*source_code_line, line_counter, error::error_11);
        _preprocessing_errors.include_error(error);
       }
 
       // If the label has already been declared, do not change the value and notify the error
       if(this->_equ_values.count(label) > 0){
-        error error(*source_code_line, line_number, error::error_01);
+        error error(*source_code_line, line_counter, error::error_01);
         _preprocessing_errors.include_error(error);
       }
       // Otherwise, add label declaration
@@ -433,7 +433,7 @@ void Preprocessor::Preprocessing(){
       // 4: Tail from the label name
 
       label = matches[3].str() + matches[4].str();
-      line_number = distance(_preprocessed_file.begin(), source_code_line);
+      
 
       // If label is found, check IF condition
       if(this->_equ_values.count(label) > 0){
@@ -442,7 +442,7 @@ void Preprocessor::Preprocessing(){
       // Otherwise, consider the IF condition false, and notify the error
       else{
         label_value_IF_condition = 1;
-        error error(*source_code_line, line_number, error::error_00);
+        error error(*source_code_line, line_counter, error::error_00);
         _preprocessing_errors.include_error(error);
       }
 
