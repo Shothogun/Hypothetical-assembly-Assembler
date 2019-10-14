@@ -1,4 +1,5 @@
 #include "../include_assembler/preprocessor.hpp"
+#include <string>
 
 ///////////////////////////////////
 //**   Constructor        
@@ -172,73 +173,100 @@ void Preprocessor::Preprocessing(){
     //**   Directives execution -------      
     ///////////////////////////////////
 
-    //**   EQU execution     
-
-    //CASE 1: EQU with one tag on the same line or two, 
-    //one on the same line as the EQU and the other on the previous line
-
-    std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s+(EQU)\\s+(\\d+)");
+    // Check for invalid token in preprocessing directives
+    std::regex IF_EQU_expression("(.*)(EQU|IF)(.*)");
+    std::regex valid_token("(^\\d+$)|(^([a-z]|[A-Z]|_)(\\w+|\\d+)*$)");
+    std::regex taps("\\s+|,|:");
+    regex_token_iterator<string::iterator> itr(source_code_line->begin(), source_code_line->end(), taps, -1);
+    regex_token_iterator<string::iterator> end;
+    string strn;
+    bool invalid_token = false;
     std::regex label_expression_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)(\\s*)(\\n)");
 
-    // Seeks the EQU directive match
-    matched_EQU = std::regex_search (*source_code_line,matches,EQU_expression_regex);
+    if(std::regex_search(*source_code_line, matches, IF_EQU_expression)){
+      while (itr != end){
+        if((*itr!= "EQU") && (*itr!="IF") && (*itr!="")){
+          strn = *itr;
+          if(!std::regex_match(strn, matches, valid_token)){
+            line_number = distance(_preprocessed_file.begin(), source_code_line);
+            error error(*source_code_line, line_number, error::error_10);
+            _preprocessing_errors.include_error(error);
+            if(source_code_line == _preprocessed_file.begin()){
+              matched_label = 0;
+            }
+            else{
+              matched_label = std::regex_search(*(source_code_line-1), matches, label_expression_regex);
+            }
+            invalid_token = true;
+            break;
+          }
+        }
+        itr++;
+      }
+      if(invalid_token){
+        if(matched_label){
+          this->_preprocessed_file.erase(source_code_line-1);
+          source_code_line--;
+        }
+        this->_preprocessed_file.erase(source_code_line);
+        source_code_line--;
+        continue;
+      }
+    }
 
-    // If a EQU directive is found
-    if(matched_EQU){
-      // Matches pattern at the directive EQU:
-      // 0: EQU directive match
-      // 1: Head character from the label
-      // 2: Tail from the label
-      // 3: Character ':'
-      // 4: 'EQU'
-      // 5: A Number
-      label = matches[1].str() + matches[2].str();
-      label_value = stoi(matches[5]);
+    // Check argument type in EQU 
+
+    std::regex EQU("(.*)(EQU)(.*)");
+    std::regex regex_number("^\\s*\\d+\\s*\\n*$");
+    std::regex regex_label("^\\s*([a-z]|[A-Z]|_)(\\w+|\\d+)(:)?\\s*\\n*$");
+    std::string number;
+    matched_EQU = std::regex_search (*source_code_line,matches,EQU);
+    number = matches[3].str();
+    if(matched_EQU && !std::regex_match(number, matches , regex_number)){
       line_number = distance(_preprocessed_file.begin(), source_code_line);
-
-      // Search the label on the previous line
-      matched_label = std::regex_search(*(source_code_line-1), matches, label_expression_regex);
-      // Matches pattern at the label:
-      // 0: label match
-      // 1: Head character from the label
-      // 2: Tail from the label
-
-      // if the previous line contained one label, notify two labels error
-      // and only considers the last label
-      if(matched_label){
-        error error(*source_code_line, line_number, error::error_11);
-        _preprocessing_errors.include_error(error);
+      error error(*source_code_line, line_number, error::error_14);
+      _preprocessing_errors.include_error(error);
+      
+      if(source_code_line == _preprocessed_file.begin()){
+        matched_label = 0;
       }
-
-      // if the label has already been declared, do not change the value and notify the error
-      if(this->_equ_values.count(label) > 0){
-        error error(*source_code_line, line_number, error::error_01);
-        _preprocessing_errors.include_error(error);
-      }
-      // Otherwise, add label declaration
       else{
-        this->_equ_values.insert(std::pair<std::string,int>(label, label_value));        
+        matched_label = std::regex_search(*(source_code_line-1), matches, label_expression_regex);
       }
-
-      // Exclude EQU directive line
+      if(matched_label){
+        this->_preprocessed_file.erase(source_code_line-1);
+        source_code_line--;
+      }
       this->_preprocessed_file.erase(source_code_line);
-
-      // After exclude, we should go back to the previous line,
-      // to not pass by the next lines
       source_code_line--;
-
       continue;
+    }
 
-      /* Debug
-      std::cout <<  this->_equ_values["TRIANGULO"] << std::endl;
-      */
+    // Check argument type in IF
+    std::regex IF("(.*)(IF)(.*)");
+    matched_IF = std::regex_search (*source_code_line,matches,IF);
+    label = matches[3].str();
+    if(matched_IF && !std::regex_match(label, matches , regex_label)){
+      line_number = distance(_preprocessed_file.begin(), source_code_line);
+      error error(*source_code_line, line_number, error::error_14);
+      _preprocessing_errors.include_error(error);
+      if(source_code_line == _preprocessed_file.begin()){
+        matched_label = 0;
+      }
+      else{
+        matched_label = std::regex_search(*(source_code_line-1), matches, label_expression_regex);
+      }
+      if(matched_label){
+        this->_preprocessed_file.erase(source_code_line-1);
+        source_code_line--;
+      }      
+      this->_preprocessed_file.erase(source_code_line);
+      source_code_line--;
+      continue;      
+    }
+    //**   EQU execution     
 
-      /* Debug
-      for (auto sub_match:matches) std::cout << sub_match << std::endl;
-      */
-    } // if1
-
-    //CASE 2: EQU with two label on the same line
+    //CASE 1: EQU with two label on the same line
 
     std::regex EQU_two_labels("(((^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s*){2,})\\s+(EQU)\\s+(\\d+)");
 
@@ -270,7 +298,82 @@ void Preprocessor::Preprocessing(){
       continue;
     }
 
-    //CASE 3: EQU with label on the previous line
+    //CASE 2: EQU with one label on the same line or two, 
+    //one on the same line as the EQU and the other on the previous line
+
+    std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s+(EQU)\\s+(\\d+)");
+    
+
+    // Seeks the EQU directive match
+    matched_EQU = std::regex_search (*source_code_line,matches,EQU_expression_regex);
+
+    // If a EQU directive is found
+    if(matched_EQU){
+      // Matches pattern at the directive EQU:
+      // 0: EQU directive match
+      // 1: Head character from the label
+      // 2: Tail from the label
+      // 3: Character ':'
+      // 4: 'EQU'
+      // 5: A Number
+  
+      label = matches[1].str() + matches[2].str();
+      label_value = stoi(matches[5]);
+      line_number = distance(_preprocessed_file.begin(), source_code_line);
+
+      // Search the label on the previous line
+      if(source_code_line == _preprocessed_file.begin()){
+        matched_label = 0;
+      }
+      else{
+        matched_label = std::regex_search(*(source_code_line-1), matches, label_expression_regex);
+      }
+      // Matches pattern at the label:
+      // 0: label match
+      // 1: Head character from the label
+      // 2: Tail from the label
+      
+      // If the previous line contained one label, notify two labels error
+      // and only considers the last label
+      if(matched_label){
+        error error(*source_code_line, line_number, error::error_11);
+       _preprocessing_errors.include_error(error);
+      }
+
+      // If the label has already been declared, do not change the value and notify the error
+      if(this->_equ_values.count(label) > 0){
+        error error(*source_code_line, line_number, error::error_01);
+        _preprocessing_errors.include_error(error);
+      }
+      // Otherwise, add label declaration
+      else{
+        this->_equ_values.insert(std::pair<std::string,int>(label, label_value));        
+      }
+
+      if(matched_label){
+        this->_preprocessed_file.erase(source_code_line-1);
+        source_code_line--;
+      }
+      // Exclude EQU directive line
+      this->_preprocessed_file.erase(source_code_line);
+
+      // After exclude, we should go back to the previous line,
+      // to not pass by the next lines
+      source_code_line--;
+
+      continue;
+
+      /* Debug
+      std::cout <<  this->_equ_values["TRIANGULO"] << std::endl;
+      */
+
+      /* Debug
+      for (auto sub_match:matches) std::cout << sub_match << std::endl;
+      */
+    } // if1
+    
+
+    //CASE 3: EQU with label on the previous line or whidout label
 
     std::regex EQU_without_label("(EQU)\\s+(\\d+)(\\s*)(\\n)");
     
@@ -286,21 +389,30 @@ void Preprocessor::Preprocessing(){
       label_value = stoi(matches[2]);
       
       // Search the label on the previous line
-      std::regex_search(*(source_code_line-1), matches, label_expression_regex);
+      if(source_code_line == _preprocessed_file.begin()){
+        matched_label = 0;
+      }
+      else{
+        matched_label = std::regex_search(*(source_code_line-1), matches, label_expression_regex);
+      }
       // Matches pattern at the label:
       // 0: label match
       // 1: Head character from the label
       // 2: Tail from the label
 
-      label = matches[1].str() + matches[2].str();
-      
-      this->_equ_values.insert(std::pair<std::string,int>(label, label_value)); 
 
+      if(matched_label){
+        label = matches[1].str() + matches[2].str();
+        // Exclude EQU label line
+        this->_preprocessed_file.erase(source_code_line-1);
+        this->_equ_values.insert(std::pair<std::string,int>(label, label_value)); 
+        source_code_line--;
+      }
+      
       // Exclude EQU directive line
       this->_preprocessed_file.erase(source_code_line);
-      
       source_code_line--;
-
+      
       continue;
 
     }
@@ -326,23 +438,13 @@ void Preprocessor::Preprocessing(){
       // If label is found, check IF condition
       if(this->_equ_values.count(label) > 0){
         label_value_IF_condition = this->_equ_values[label];
-
       }
       // Otherwise, consider the IF condition false, and notify the error
       else{
-        label_value_IF_condition = 0;
+        label_value_IF_condition = 1;
         error error(*source_code_line, line_number, error::error_00);
         _preprocessing_errors.include_error(error);
       }
-      // If label value is 0, preprocess should erase next line
-      if(!label_value_IF_condition){
-        this->_preprocessed_file.erase(source_code_line);
-      }
-
-      // After exclude, we should go back to the previous line,
-      // to not pass by the next lines
-      source_code_line--;
-      continue;
 
       /* Debug
       std::cout <<  label << std::endl;
@@ -353,8 +455,19 @@ void Preprocessor::Preprocessing(){
       std::cout << label_value_IF_condition << std::endl;
       */
 
+      // If label value is 0, preprocess should erase next line
+      if(!label_value_IF_condition){
+        this->_preprocessed_file.erase(source_code_line);
+        source_code_line--;
+      }
+
       // Exclude IF directive line
       this->_preprocessed_file.erase(source_code_line);
+      
+      // After exclude, we should go back to the previous line,
+      // to not pass by the next lines
+      source_code_line--;
+      continue;
 
       /* Debug
       for (auto sub_match:matches) std::cout << sub_match << std::endl;
@@ -368,9 +481,9 @@ void Preprocessor::Preprocessing(){
   	std::cout << *it;
   }
   */
- 
+
   // Display all errors found
-  _preprocessing_errors.display(error_log::SIMPLE);
+  _preprocessing_errors.display(error_log::DETAILED);
 
 }
 

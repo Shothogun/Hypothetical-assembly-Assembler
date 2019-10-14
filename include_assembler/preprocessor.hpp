@@ -57,7 +57,7 @@ class Preprocessor{
     bool _exists = false;
     //! _preprocessing_errors 
     /*!
-     *
+     * Store all errors from EQU and IF directives
      * 
     */
     error_log _preprocessing_errors;
