@@ -78,6 +78,15 @@ int instruction_table::get_opcode(string identifier){
 }
 
 // CLASS SYMBOL_TABLE
+bool symbol_table::search(string identifier){
+    itr = this->table.find(identifier);
+    if(itr != this->table.end()){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
 
 int symbol_table::get_value(string identifier){
     // Check if symbol is in table
@@ -110,6 +119,14 @@ int symbol_table::get_list_address(string identifier){
     else{
         return ERROR;
     }
+}
+
+void symbol_table::PrintTable(){
+    map<string, int[T_SIZE]> table;
+    
+    for (map<string, int[T_SIZE]>::iterator it= this->table.begin(); it!=this->table.end(); ++it)
+        std::cout << it->first << " => " << it->second[0] << " " <<it->second[1]<< " "
+         << it->second[2] << '\n';
 }
 
 // CLASS ERROR

@@ -11,11 +11,9 @@ SECTION TEXT
 		INPUT		H
 		LOAD		B
 		MULT		H
-		IF biscoito
-		COPY		B  	,						H
+		COPY		B +1 	,						H    + 3 
 		IF triangulo
-		DIV		DOIS +						2
-		IF 13#$!@			
+		DIV		DOIS +						1
 		STORE		R
 		OUTPUT	R
 		STOP
