@@ -66,6 +66,10 @@ class Assembler{
     // ERROR Code
     static const int ERROR = -1;
 
+    //! Label use context
+    static const int LABEL_OPERAND = 100;
+    static const int LABEL_DEFINITION = 101;
+
     //! Instruction table to object code generation
     instruction_table* _instruction_table;
 
@@ -95,6 +99,7 @@ class Assembler{
     /*!                 std::string operand2);
      *
      *  Produces a COPY object code instruction
+     *  or a directive CONST or SPACE
      */
     void GenerateObjCode(std::string instruction, std::string operand1,
                          std::string operand2);
@@ -105,6 +110,30 @@ class Assembler{
      *  his object machine code equivalent
      */
     void IdentifyCommandType();
+
+
+    //! LabelIdentifier();
+    /*
+     *  Returns the value that will be inserted
+     *  at object code:
+     * 
+     *  Identify defined labels, returning its value.
+     *  At the case of undefined labels, 
+     *  creates a list of undefined labels in object code,
+     *  by consulting symbol tabel. Returns the label's last 
+     *  reference address as operand at object code
+     *  before the new reference, and 
+     *  updates list_address at symbol table to the new reference address
+     */
+    int LabelIdentifier(std::string label, int use_type);
+
+    //! ResolveLabelValue(std::string label);
+    /*
+     *  Once a label value mentioned earlier is defined,
+     *  its values is substituted by the new defined one
+     */
+    int ResolveLabelValue(std::string label);
+
 
     //! _pre_file
     /*! 
@@ -119,6 +148,20 @@ class Assembler{
     */
     std::vector<std::string> _object_file;
 
+
+    //! _section_data_commands
+    /*! 
+     *  Stores the preprocessed code's section data
+     *  in machine code's version. This is appended
+     *  to the object file at the its ending.
+    */
+    std::vector<std::string> _section_data_commands;
+
+    //! _address_offset
+    /*! 
+     *  Stores all address offset 
+    */
+    map<int, int> _address_offset;
 
 
     //! _instruction_operator
@@ -141,6 +184,20 @@ class Assembler{
     */
     std::string _instruction_operand_2;
 
+    //! _operand_1_offset
+    /*!
+    *   Stores the label offset placed at as operand
+    *   at operations
+    */
+    std::string _operand_1_offset;
+
+
+    //! _operand_2_offset
+    /*!
+    *   Stores the current line from the preprocessed code
+    */
+    std::string _operand_2_offset;
+
     //! _section_identifier
     /*! 
      *  Stores the current section being analised 
@@ -160,6 +217,7 @@ class Assembler{
     *   Stores the current line from the preprocessed code
     */
     int _current_line = 0;
+
 };
 
 #endif

@@ -165,12 +165,25 @@ void Preprocessor::Preprocessing(){
     ///////////////////////////////////
     //**   Ajust COPY operators -------
     ///////////////////////////////////
+    // Matches pattern at instruction COPY:
+    // 0: Instruction COPY match
+    // 1: COPY
+    // 2: space character
+    // 3: Label
+    // 4: Plus character
+    // 5: A digit
+    // 6: space character
+    // 7: comma character
+    // 8: space character
+    // 9: Label
+    // 10: Plus character
+    // 11: A digit
 
-    std::regex COPY_regex("(COPY)(\\s)(\\w+)(\\s)(,)(\\s)(\\w+)");  
+    std::regex COPY_regex("(COPY)(\\s)(\\w+)(\\+*)(\\d*)(\\s)(,)(\\s)(\\w+)(\\+*)(\\d*)");  
 
     // Get the COPY operator and its operands to format 
     // to the default pattern(COPY operand_1,operand_2)
-    *source_code_line = std::regex_replace (*source_code_line,COPY_regex,"$1 $3,$7");
+    *source_code_line = std::regex_replace (*source_code_line,COPY_regex,"$1 $3$4$5,$9$10$11");
 
     ///////////////////////////////////
     //**   Directives execution -------      
