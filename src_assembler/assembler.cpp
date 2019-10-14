@@ -207,7 +207,7 @@ void Assembler::Assembling(){
     //**   Identify regular instruction ---------
     //////////////////////////////////////////////
     
-    std::regex INSTRUCTION_regex("(\\w+)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)");
+    std::regex INSTRUCTION_regex("(\\w+)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
 
     // Seek the instruction match
     is_a_regular_instruction = std::regex_search (*preprocessed_code_line,
@@ -223,9 +223,12 @@ void Assembler::Assembling(){
       // 2: space character
       // 3: Head character from the label
       // 4: Tail from the label
+      // 5: Plus character
+      // 6: A digit
 
       this->_instruction_operator = matches[1].str();
       this->_instruction_operand_1 = matches[3].str() + matches[4].str();
+      this->_operand_1_offset = matches[6].str();
 
       // Indicates the line's command kind
       this->_line_type_identifier = REGULAR_TYPE;
@@ -234,7 +237,7 @@ void Assembler::Assembling(){
     //////////////////////////////////////////////
     //**   Identify COPY instruction -------------
     //////////////////////////////////////////////
-    std::regex COPY_instruction_regex("(COPY)(\\s)(\\w+)(,)(\\w+)");
+    std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
 
     // Seek the instruction match
     is_a_COPY_instruction = std::regex_search (*preprocessed_code_line,
@@ -245,13 +248,29 @@ void Assembler::Assembling(){
       // 0: Instruction COPY match
       // 1: COPY
       // 2: space character
-      // 3: operand 1
-      // 4: comma ',' character
-      // 5: operand 2
+      // 3: Head character from the label
+      // 4: Tail from the label
+      // 5: Plus character
+      // 6: A digit
+      // 7: comma character
+      // 8: Head character from the label
+      // 9: Tail from the label
+      // 10: Plus character
+      // 11: A digit
+
 
       this->_instruction_operator = matches[1].str();
-      this->_instruction_operand_1 = matches[3].str();
-      this->_instruction_operand_2 = matches[5].str();
+      this->_instruction_operand_1 = matches[3].str()+ matches[4].str();
+      this->_instruction_operand_2 = matches[8].str()+ matches[9].str();
+      this->_operand_1_offset = matches[6].str();
+      this->_operand_2_offset = matches[11].str();
+
+      /* Debug
+      std::cout<< this->_instruction_operand_1 << endl;
+      std::cout<< this->_instruction_operand_2 << endl;
+      std::cout<< this->_operand_1_offset << endl;
+      std::cout<< this->_operand_2_offset << endl;
+      */
 
       // Indicates the line's command kind
       this->_line_type_identifier = COPY_TYPE;
@@ -386,9 +405,6 @@ void Assembler::Assembling(){
     i++;
   }
   */
-
-
-
 }
 
 void Assembler::IdentifyCommandType(){
@@ -461,15 +477,35 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
       current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
 
+    
+      // Store labels offset 
+      if(this->_operand_1_offset.compare("") != 0) {
+        this->_address_offset[current_object_code_address] = stoi(this->_operand_1_offset);  
+      }
+
+      else{
+        this->_address_offset[current_object_code_address] = 0;
+      }
+
       // Operand 1
       label_value = to_string(LabelIdentifier(operand1, LABEL_OPERAND));
+      
       this->_object_file.insert(this->_object_file.begin(), 
                                 label_value);
       this->_symbol_table->set_list_address(operand1, current_object_code_address);
 
       current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
 
-      // Operand 1
+      // Store labels offset 
+      if(this->_operand_2_offset.compare("") != 0) {
+        this->_address_offset[current_object_code_address] = stoi(this->_operand_2_offset);  
+      }
+
+      else{
+        this->_address_offset[current_object_code_address] = 0;
+      }
+
+      // Operand 2
 
       label_value = to_string(LabelIdentifier(operand2, LABEL_OPERAND));
       this->_object_file.insert(this->_object_file.begin(), 
@@ -547,6 +583,16 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
       //////////////////////////////////////////////
     
       current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
+
+      // Store labels offset 
+      if(this->_operand_1_offset.compare("") != 0) {
+        this->_address_offset[current_object_code_address] = stoi(this->_operand_1_offset);  
+      }
+
+      else{
+        this->_address_offset[current_object_code_address] = 0;
+      }
+
       label_value = to_string(LabelIdentifier(operand1, LABEL_OPERAND));
       this->_object_file.insert(this->_object_file.begin(), 
                                 label_value);
@@ -718,7 +764,7 @@ int Assembler::ResolveLabelValue(std::string label){
 
   while(label_reference != -1) {
     next_label_reference = stoi(this->_object_file[label_reference]);
-    this->_object_file[label_reference] = to_string(label_value);
+    this->_object_file[label_reference] = to_string(label_value + this->_address_offset[label_reference]);
     label_reference = next_label_reference;
   }
 

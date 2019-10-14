@@ -157,6 +157,11 @@ class Assembler{
     */
     std::vector<std::string> _section_data_commands;
 
+    //! _address_offset
+    /*! 
+     *  Stores all address offset 
+    */
+    map<int, int> _address_offset;
 
 
     //! _instruction_operator
@@ -179,6 +184,20 @@ class Assembler{
     */
     std::string _instruction_operand_2;
 
+    //! _operand_1_offset
+    /*!
+    *   Stores the label offset placed at as operand
+    *   at operations
+    */
+    std::string _operand_1_offset;
+
+
+    //! _operand_2_offset
+    /*!
+    *   Stores the current line from the preprocessed code
+    */
+    std::string _operand_2_offset;
+
     //! _section_identifier
     /*! 
      *  Stores the current section being analised 
@@ -198,6 +217,7 @@ class Assembler{
     *   Stores the current line from the preprocessed code
     */
     int _current_line = 0;
+
 };
 
 #endif
