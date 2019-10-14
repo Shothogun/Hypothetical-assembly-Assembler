@@ -152,9 +152,9 @@ map<int, string> error::error_details = {
 };
 
 map<int, string> error::error_types = {
-    {0, "Sintático"},
-    {1, "Semantico"},
-    {2, "Léxico"}
+    {1, "Sintático"},
+    {2, "Semantico"},
+    {0, "Léxico"}
 };
 
 
@@ -162,19 +162,21 @@ error::error(string error_line, int error_line_number, int error_code){
     this->error_line_number = error_line_number;
     this->error_line = error_line;
     this->error_code = error_code;
-    this->error_type = (int)error_code/ERROR_TYPE_MASK;
+    this->error_type = (int)(error_code/ERROR_TYPE_MASK);
 }
 
 // CLASS ERROR_LOG
 
 void error_log::display(int option){
-    cout << "Relatório de Erros:" << endl;
+    if(error_list.empty()){return;}
+    cout << "Relatório de Erros:\n" << endl;
     for(itr=error_list.begin(); itr!=error_list.end(); itr++){
-        cout << "Número da linha: " << itr->get_error_line_number() << " Tipo: " << 
+        cout << "Número da linha: " << itr->get_error_line_number() << "     Tipo: " << 
         itr->error_types[itr->get_error_type()] << endl; 
         if(option == DETAILED){
-            cout << "Código: " << itr->get_error_line() << endl;
+            cout << "Linha de código: " << itr->get_error_line();
             cout << "Detalhes: " << itr->get_error_details() << endl;
         }
+        cout<<endl;
     }
 }

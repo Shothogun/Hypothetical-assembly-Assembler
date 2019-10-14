@@ -1,12 +1,10 @@
-	TRIANGULO: EQU 1
-	_Abobrinhas: EQU 2
-
-
-
-
-  
-		
-
+TRIANGULO: EQU abas
+1BISCOITO: EQU 1
+Ab:
+EQU 1*72$#
+biscoit: bisc: EQU 1
+bicoi:	
+bisca: EQU 3
 SECTION TEXT
 		INPUT		B   ; isso aqui é um triangulo
 	; isso aqui é um triangulo
