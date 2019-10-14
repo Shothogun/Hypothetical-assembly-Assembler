@@ -61,6 +61,11 @@ public:
     int get_value(string identifier);
     bool get_definition(string identifier);
     int get_list_address(string identifier);
+
+    void PrintTable();
+
+    // Tells whether an identifier is present in the table or not
+    bool search(string identifier);
 };
 
 //This class implements the error type and contains the line where the error occurred,

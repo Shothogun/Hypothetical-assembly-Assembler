@@ -64,6 +64,7 @@ Assembler::Assembler(char* preprocessed_code_name){
 //////////////////////////////////
 Assembler::~Assembler(){
   delete this->_instruction_table;
+  delete this->_symbol_table;
 }
 
 ///////////////////////////////////
@@ -101,6 +102,9 @@ void Assembler::Assembling(){
   // Indicates that is a CONST directive
   bool is_a_CONST_directive = false;
 
+  // Indicates that is a label definition
+  bool label_definition = false;
+
   // Array composed by the matches found in the regex search
   std::smatch matches;
 
@@ -118,6 +122,27 @@ void Assembler::Assembling(){
   for(preprocessed_code_line = this->_pre_file.begin();
       preprocessed_code_line < this->_pre_file.end();
       preprocessed_code_line++) {    
+                        //////////////////////////////////////////////
+                        //**   Identify Label at beginning
+                        //////////////////////////////////////////////
+
+    // Identifies, eliminates from the code
+    // and stores its value into the symbol table
+    std::regex label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(.*)");
+    label_definition = std::regex_search (*preprocessed_code_line,
+                        matches,label_regex);
+
+    this->_instruction_operand_1 = matches[1].str() + matches[2].str();
+
+
+    if(label_definition) {
+      *preprocessed_code_line = std::regex_replace (*preprocessed_code_line,label_regex,"$5");
+      LabelIdentifier(this->_instruction_operand_1, LABEL_DEFINITION);
+      /* Debug
+      std::cout << this->_instruction_operand_1 << std::endl;
+      */      
+    }
+
                             
                         //////////////////////////////////////////////
                         //**   Separate elements from line
@@ -256,7 +281,7 @@ void Assembler::Assembling(){
     //**   Identify SPACE directive --------------
     //////////////////////////////////////////////
     
-    std::regex SPACE_directive_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:\\s)(SPACE)(\\s*)(\\d*)");
+    std::regex SPACE_directive_regex("(SPACE)(\\s*)(\\d*)");
 
     // Seek the instruction match
     is_a_SPACE_directive = std::regex_search (*preprocessed_code_line,
@@ -265,21 +290,17 @@ void Assembler::Assembling(){
     if(is_a_SPACE_directive){
       // Matches pattern at directive SPACE:
       // 0: Directive SPACE match
-      // 1: Head character from the label
-      // 2: Tail from the label
-      // 3: ':' plus space character 
-      // 4: SPACE
-      // 6: A number
+      // 1: SPACE
+      // 2: space character
+      // 3: A digit
 
-      this->_instruction_operand_1 = matches[1].str() + matches[2].str();
-      this->_instruction_operator = matches[4].str();
-      this->_instruction_operand_2 = matches[6].str();
+      this->_instruction_operator = matches[1].str();
+      this->_instruction_operand_2 = matches[3].str();
 
       // Indicates the line's command kind
       this->_line_type_identifier = SPACE_TYPE;
 
       /* Debug
-      std::cout<< "Label    : " << this->_instruction_operand_1 << std::endl;
       std::cout<< "Directive: " << this->_instruction_operator << std::endl;
       std::cout<< "Number   : " << this->_instruction_operand_2 << std::endl;
       */
@@ -289,7 +310,7 @@ void Assembler::Assembling(){
     //**   Identify CONST directive --------------
     //////////////////////////////////////////////
 
-    std::regex CONST_directive_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:\\s)(CONST)(\\s)(\\d+)");
+    std::regex CONST_directive_regex("(CONST)(\\s)(\\d+)");
 
     // Seek the instruction match
     is_a_CONST_directive = std::regex_search (*preprocessed_code_line,
@@ -298,28 +319,21 @@ void Assembler::Assembling(){
     if(is_a_CONST_directive){
       // Matches pattern at directive SPACE:
       // 0: Directive CONST match
-      // 1: Head character from the label
-      // 2: Tail from the label
-      // 3: ':' plus space character 
-      // 4: CONST 
-      // 5: Space character
-      // 6: A number
+      // 1: CONST 
+      // 2: Space character
+      // 3: A number
 
-      this->_instruction_operand_1  = matches[1].str() + matches[2].str();
-      this->_instruction_operator = matches[4].str();
-      this->_instruction_operand_2 = matches[6].str();
+      this->_instruction_operator = matches[1].str();
+      this->_instruction_operand_2 = matches[3].str();
 
       // Indicates the line's command kind
       this->_line_type_identifier = CONST_TYPE;
 
       /* Debug
-      std::cout<< "Label    : " << this->_instruction_operand_1 << std::endl;
       std::cout<< "Directive: " << this->_instruction_operator << std::endl;
       std::cout<< "Number  : " << this->_instruction_operand_2 << std::endl;
       */
-    } 
-
-
+    }
                         //////////////////////////////////////////////
                         //**   ERROR verify --------------------------
                         //////////////////////////////////////////////
@@ -328,11 +342,15 @@ void Assembler::Assembling(){
                         //**   Produce the machine code --------------
                         //////////////////////////////////////////////
     
-    IdentifyCommandType();
+  IdentifyCommandType();
 
   /* Debug
   std::cout << *preprocessed_code_line;
   */ 
+
+  //Debug
+  this->_symbol_table->PrintTable();
+  //
 
   } // for 
 
@@ -355,6 +373,20 @@ void Assembler::Assembling(){
   // Corrects the object code lines order(inserted in the reversed order)
   std::reverse(this->_object_file.begin(),
                this->_object_file.end()); 
+
+
+  std::vector<std::string>::iterator it;
+
+  //debug
+  int i = 0;
+  for(it = this->_object_file.begin(); it < this->_object_file.end(); it++){
+    std::cout << "end " << i << ":\t" <<*it << std::endl;
+    i++;
+  }
+  //
+
+
+
 }
 
 void Assembler::IdentifyCommandType(){
@@ -375,7 +407,6 @@ void Assembler::IdentifyCommandType(){
       break;
       
     case SPACE_TYPE:
-      //! this->_instruction_operand_1: Label
       //! this->_instruction_operand_2: Alloc Size
       GenerateObjCode(this->_instruction_operator,
             this->_instruction_operand_1,
@@ -383,7 +414,6 @@ void Assembler::IdentifyCommandType(){
       break;
 
     case CONST_TYPE:
-      //! this->_instruction_operand_1: Label
       //! this->_instruction_operand_2: Const value
       GenerateObjCode(this->_instruction_operator,
             this->_instruction_operand_1,
@@ -404,14 +434,21 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
     //////////////////////////////////////////////
     //**   Generate machine code -----------------
     //////////////////////////////////////////////
-    // There's a equivalent instruciton at the 
+    // There's a equivalent instruction at the 
     // instruction table
 
+    // Value tha will be add at object code
+    std::string label_value;
     int opcode = this->_instruction_table->get_opcode(instruction);
     int label_const_value,i;
     int space_size;
 
-    // Command located in section type and opcode found
+    // Address at object code. At this function, it's
+    // used for location of undefined label at the object code 
+    // to the pendency list
+    int current_object_code_address;
+
+    // Command located in section type and opcode COPY found
     if(this->_section_identifier == TEXT && opcode != ERROR){
       this->_object_file.insert(this->_object_file.begin(), 
                                 to_string(opcode)); 
@@ -420,12 +457,22 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
       //**   Labels identify -----------------------
       //////////////////////////////////////////////
 
-      // Debug
+      current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
+
+      // Operand 1
+      label_value = to_string(LabelIdentifier(operand1, LABEL_OPERAND));
       this->_object_file.insert(this->_object_file.begin(), 
-                                "-1"); 
+                                label_value);
+      this->_symbol_table->set_list_address(operand1, current_object_code_address);
+
+      current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
+
+      // Operand 1
+
+      label_value = to_string(LabelIdentifier(operand2, LABEL_OPERAND));
       this->_object_file.insert(this->_object_file.begin(), 
-                                "-1"); 
-      //
+                                label_value); 
+      this->_symbol_table->set_list_address(operand2, current_object_code_address);
 
     }
 
@@ -464,6 +511,10 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
       }
     }
 
+    else {
+
+    }
+
     //////////////////////////////////////////////
     //**   ERROR case ----------------------------
     //////////////////////////////////////////////
@@ -473,6 +524,14 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
     //////////////////////////////////////////////
     //**   Generate machine code -----------------
     //////////////////////////////////////////////
+
+    // Value tha will be add at object code
+    std::string label_value;
+
+    // Address at object code. At this function, it's
+    // used for location of undefined label at the object code 
+    // to the pendency list
+    int current_object_code_address;
 
     // There's a equivalent instruction at the 
     // instruction table
@@ -484,16 +543,17 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
       //////////////////////////////////////////////
       //**   Identify label ------------------------
       //////////////////////////////////////////////
-
-      // Debug
+    
+      current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
+      label_value = to_string(LabelIdentifier(operand1, LABEL_OPERAND));
       this->_object_file.insert(this->_object_file.begin(), 
-                                "-1"); 
-      //
+                                label_value);
+      this->_symbol_table->set_list_address(operand1, current_object_code_address);
 
     }
 
     //////////////////////////////////////////////
-    //**   If none instruction corresponds --------
+    //**   ERROR CASE ----------------------------
     //////////////////////////////////////////////
 }
 
@@ -501,7 +561,7 @@ void Assembler::GenerateObjCode(std::string instruction) {
     //////////////////////////////////////////////
     //**   Generate machine code -----------------
     //////////////////////////////////////////////
-    // There's a equivalent instruciton at the 
+    // There's a equivalent instrution at the 
     // instruction table
     int opcode = this->_instruction_table->get_opcode(instruction);
     if(opcode != ERROR){
@@ -515,7 +575,7 @@ void Assembler::GenerateObjCode(std::string instruction) {
     }
 
     //////////////////////////////////////////////
-    //**   If none instruction corresponds --------
+    //**   ERROR CASE ----------------------------
     //////////////////////////////////////////////    
 }
 
@@ -558,4 +618,119 @@ void Assembler::MakeObjectFile(char* source_code_name){
   }
   fclose(pre_file);
 
+}
+
+
+///////////////////////////////////
+//**   LabelIdentifier
+//////////////////////////////////
+
+int Assembler::LabelIdentifier(std::string label, int use_type) {
+  // Address at object code. At this function, it's
+  // used for location of label at the object code 
+  int current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
+
+  // Verifies symbol table contains label 
+  if(this->_symbol_table->search(label) == true){
+    switch (use_type)
+    {
+    case LABEL_OPERAND:
+      // Verifies if it's defined
+      if(this->_symbol_table->get_definition(label)){
+        return this->_symbol_table->get_value(label);
+      }
+
+      else {
+        return this->_symbol_table->get_list_address(label);
+      }
+      break;
+    case LABEL_DEFINITION:
+      // Verifies if it's defined
+      if(this->_symbol_table->get_definition(label)){
+        // ERROR case
+      }
+
+      else {
+        ResolveLabelValue(label);
+      }
+      break;
+    default:
+      break;
+    }
+
+  }
+
+  // If it's the first time the label is mentioned
+  // inserts at symbol table
+  else {
+    switch (use_type)
+    {
+    case LABEL_OPERAND:
+      // Default value
+      this->_symbol_table->set_value(label, 0);
+      // Set as undefined
+      this->_symbol_table->set_definition(label, false);
+      // Symbol location reference at code
+      this->_symbol_table->set_list_address(label, current_object_code_address);
+
+      /* Debug
+      std::cout<< this->_symbol_table->search(label) << std::endl;
+      */      
+
+      // 
+      return -1;
+
+      break;
+    
+    case LABEL_DEFINITION:
+      // Label's addres
+      this->_symbol_table->set_value(label, current_object_code_address);
+      // Set as defined
+      this->_symbol_table->set_definition(label, true);
+      // Symbol location reference at code
+      this->_symbol_table->set_list_address(label, -1);
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+int Assembler::ResolveLabelValue(std::string label){
+  // Address at object code. At this function, it's
+  // used for location of label at the object code.
+  // Must be added to section data because codes are 
+  // stored in differents vectors.
+  int label_value = this->_object_file.size() + this->_section_data_commands.size();
+
+  // Access last reference to label at object code
+  int label_reference = this->_symbol_table->get_list_address(label);
+
+  int next_label_reference;
+
+  // Reverses object file vector to cascading
+  // value substitution process. Thus, 0 index must be
+  // the first byte, not the last
+  std::reverse(this->_object_file.begin(),
+               this->_object_file.end()); 
+
+  while(label_reference != -1) {
+    cout<< label_reference << endl;
+    cout<< label << endl;
+    next_label_reference = stoi(this->_object_file[label_reference]);
+    cout<< next_label_reference << endl;
+    this->_object_file[label_reference] = to_string(label_value);
+    label_reference = next_label_reference;
+
+  }
+
+  // Goes back to its standard pattern(inverted list)
+  std::reverse(this->_object_file.begin(),
+              this->_object_file.end()); 
+
+  // Label's address
+  this->_symbol_table->set_value(label, label_value);
+
+  // Set as defined
+  this->_symbol_table->set_definition(label, true);
 }
