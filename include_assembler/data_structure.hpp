@@ -62,6 +62,8 @@ public:
     bool get_definition(string identifier);
     int get_list_address(string identifier);
 
+    //! PrintTable();
+    // A debug function
     void PrintTable();
 
     // Tells whether an identifier is present in the table or not

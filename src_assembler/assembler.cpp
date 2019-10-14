@@ -348,9 +348,9 @@ void Assembler::Assembling(){
   std::cout << *preprocessed_code_line;
   */ 
 
-  //Debug
+  /*Debug
   this->_symbol_table->PrintTable();
-  //
+  */
 
   } // for 
 
@@ -362,6 +362,8 @@ void Assembler::Assembling(){
   std::reverse(this->_section_data_commands.begin(),
                this->_section_data_commands.end()); 
 
+  // Inserts SECTION DATA information to the end of
+  // Object file code 
   for(section_data_values = this->_section_data_commands.begin();
       section_data_values < this->_section_data_commands.end();
       section_data_values++) {
@@ -370,20 +372,20 @@ void Assembler::Assembling(){
                               *section_data_values); 
   }
  
-  // Corrects the object code lines order(inserted in the reversed order)
+  // Corrects the object code lines order(C++ vectores is inserted in the reversed order)
   std::reverse(this->_object_file.begin(),
                this->_object_file.end()); 
 
 
-  std::vector<std::string>::iterator it;
 
-  //debug
+  /*debug
+  std::vector<std::string>::iterator it;
   int i = 0;
   for(it = this->_object_file.begin(); it < this->_object_file.end(); it++){
     std::cout << "end " << i << ":\t" <<*it << std::endl;
     i++;
   }
-  //
+  */
 
 
 
@@ -715,13 +717,9 @@ int Assembler::ResolveLabelValue(std::string label){
                this->_object_file.end()); 
 
   while(label_reference != -1) {
-    cout<< label_reference << endl;
-    cout<< label << endl;
     next_label_reference = stoi(this->_object_file[label_reference]);
-    cout<< next_label_reference << endl;
     this->_object_file[label_reference] = to_string(label_value);
     label_reference = next_label_reference;
-
   }
 
   // Goes back to its standard pattern(inverted list)
