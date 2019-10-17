@@ -56,6 +56,8 @@ void Preprocessor::Preprocessing(){
   // Array composed by the matches found in the regex search
   std::smatch matches;
 
+  const int MAX_SIZE_TOKEN = 50;
+
   // Boolean value to verify directive occurence
   int matched_EQU, matched_IF, matched_empty_line, matched_label;
 
@@ -203,7 +205,7 @@ void Preprocessor::Preprocessing(){
       while (itr != end){
         if((*itr!= "EQU") && (*itr!="IF") && (*itr!="")){
           strn = *itr;
-          if(!std::regex_match(strn, matches, valid_token)){
+          if(!std::regex_match(strn, matches, valid_token) || (strn.length() > MAX_SIZE_TOKEN)){
             
             error error(*source_code_line, line_counter, error::error_10);
             _preprocessing_errors.include_error(error);
@@ -282,7 +284,6 @@ void Preprocessor::Preprocessing(){
     }
     //**   EQU execution     
 
-<<<<<<< HEAD
     //CASE 1: EQU with two label on the same line
 
     std::regex EQU_two_labels("(((^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s*){2,})\\s+(EQU)\\s+(\\d+)");
@@ -319,10 +320,6 @@ void Preprocessor::Preprocessing(){
     //one on the same line as the EQU and the other on the previous line
 
     std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w+|\\d+)(:)\\s+(EQU)\\s+(\\d+)");
-    
-=======
-    std::regex EQU_expression_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)\\s+(EQU)\\s+(\\d+)");
->>>>>>> 36adf5d538d79b879d4e342885199a2b400ef8ec
 
     // Seeks the EQU directive match
     matched_EQU = std::regex_search (*source_code_line,matches,EQU_expression_regex);
