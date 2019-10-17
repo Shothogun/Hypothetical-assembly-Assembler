@@ -31,3 +31,5 @@
 *.app
 
 .vscode/
+/exec_simulator/simulador
+/exec_assembler/montador
