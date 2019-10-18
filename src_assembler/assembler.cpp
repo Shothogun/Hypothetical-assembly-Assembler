@@ -819,10 +819,10 @@ void Assembler::ResolveLabelValue(std::string label){
                             error::error_16);
 
       _assembling_errors->include_error(out_range_error);
-    // Debug
+    /* Debug
     cout<< alloc_size <<endl;
     cout<<this->_address_offset[label_reference][OFFSET] <<endl;
-    //
+    */
     }
 
 
