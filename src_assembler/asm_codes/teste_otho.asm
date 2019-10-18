@@ -13,7 +13,7 @@ SECTION TEXT
 		INPUT		H
 		LOAD		B
 		MULT		H
-		COPY		B +1 	,						H    + 3 
+		COPY		B +1 	,						H    + 2
 		IF triangulo
 		DIV		DOIS +						1
 		STORE		R
