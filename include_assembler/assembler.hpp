@@ -132,7 +132,16 @@ class Assembler{
      *  Once a label value mentioned earlier is defined,
      *  its values is substituted by the new defined one
      */
-    int ResolveLabelValue(std::string label);
+    void ResolveLabelValue(std::string label);
+
+    //! AllocSizeManager();
+    /*
+     *  Indicates how many spaces are stored
+     *  to the label defined. A regular ocupies 1.
+     *  At SPACES directives, allocates N given.
+     *  Returns the SPACE size allocated.
+     */
+    int AllocSizeManager();
 
 
     //! _pre_file
@@ -159,10 +168,15 @@ class Assembler{
 
     //! _address_offset
     /*! 
-     *  Stores all address offset 
+     *  Stores all address offset.
+     *  First value: offset
+     *  Second value: line occurred it
     */
-    map<int, int> _address_offset;
+   
+    static const  int   OFFSET = 0;
+    static const  int   LINE   = 1;
 
+    map<int, int[2]> _address_offset;
 
     //! _instruction_operator
     /*! 

@@ -122,6 +122,10 @@ void Assembler::Assembling(){
   for(preprocessed_code_line = this->_pre_file.begin();
       preprocessed_code_line < this->_pre_file.end();
       preprocessed_code_line++) {    
+
+      // Steps one line from preprocessed code
+      this->_current_line++;
+      
                         //////////////////////////////////////////////
                         //**   Identify Label at beginning
                         //////////////////////////////////////////////
@@ -152,8 +156,7 @@ void Assembler::Assembling(){
     is_a_COPY_instruction = false;
     is_a_STOP_instruction = false;
 
-    // Steps one line from preprocessed code
-    this->_current_line++;
+
         
     //////////////////////////////////
     //**   SECTION TEXT identifier ---
@@ -480,11 +483,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
     
       // Store labels offset 
       if(this->_operand_1_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line;
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line;
       }
 
       // Operand 1
@@ -498,11 +503,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
       // Store labels offset 
       if(this->_operand_2_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_2_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_2_offset); 
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line; 
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line;
       }
 
       // Operand 2
@@ -512,7 +519,7 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
                                 label_value); 
       this->_symbol_table->set_list_address(operand2, current_object_code_address);
 
-    }
+    } //if
 
     // Command located in DATA type and opcode not found, 
     // that means a directive
@@ -546,8 +553,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
       
       default:
         break;
-      }
-    }
+      } // switch
+    }// else if
 
     else {
 
@@ -586,11 +593,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
 
       // Store labels offset 
       if(this->_operand_1_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_1_offset);
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line;
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line;
       }
 
       label_value = to_string(LabelIdentifier(operand1, LABEL_OPERAND));
@@ -740,11 +749,14 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       break;
     default:
       break;
-    }
-  }
+    }// switch
+  }// else
+
+  return 0;
 }
 
-int Assembler::ResolveLabelValue(std::string label){
+
+void Assembler::ResolveLabelValue(std::string label){
   // Address at object code. At this function, it's
   // used for location of label at the object code.
   // Must be added to section data because codes are 
@@ -754,7 +766,16 @@ int Assembler::ResolveLabelValue(std::string label){
   // Access last reference to label at object code
   int label_reference = this->_symbol_table->get_list_address(label);
 
+  // Iteration to the next line which reference the label
+  // again.
   int next_label_reference;
+
+  // Indicates the address from the label plus the offset 
+  // from the operand
+  int access_address;
+
+  // Label's size at SPACE command
+  int alloc_size;
 
   // Reverses object file vector to cascading
   // value substitution process. Thus, 0 index must be
@@ -762,9 +783,33 @@ int Assembler::ResolveLabelValue(std::string label){
   std::reverse(this->_object_file.begin(),
                this->_object_file.end()); 
 
+  alloc_size = AllocSizeManager();
+
   while(label_reference != -1) {
+
     next_label_reference = stoi(this->_object_file[label_reference]);
-    this->_object_file[label_reference] = to_string(label_value + this->_address_offset[label_reference]);
+
+    access_address = label_value + this->_address_offset[label_reference][OFFSET];
+
+    //////////////////////////////////////////////////////////////
+    //**   Label's storage memory access validation(SPACE range)
+    //////////////////////////////////////////////////////////////
+
+    // The offset surpass the alloc maximum, that is alloc-size-1.
+    // At offset 0, it's the base address
+    if(alloc_size - 1 < this->_address_offset[label_reference][OFFSET]){
+      //ERROR - Out-of-range label access
+      /* Debug
+      cout<< "ERROR case" << this->_address_offset[label_reference][LINE] <<endl;
+      */
+    }
+
+    /* Debug
+    cout<< alloc_size <<endl;
+    cout<<this->_address_offset[label_reference][OFFSET] <<endl;
+    */
+
+    this->_object_file[label_reference] = to_string(access_address);
     label_reference = next_label_reference;
   }
 
@@ -777,4 +822,22 @@ int Assembler::ResolveLabelValue(std::string label){
 
   // Set as defined
   this->_symbol_table->set_definition(label, true);
+}
+
+int Assembler::AllocSizeManager(){
+  // Store labels alloc size at SPACE command
+  if(this->_line_type_identifier == SPACE_TYPE){
+    if(this->_instruction_operand_2.compare("") != 0) {
+      return stoi(this->_instruction_operand_2);  
+    }
+
+    else{
+      return 1;
+    } // else
+  } // if
+
+  // Common Label(just 1 alloc size)
+  else{
+    return 1;
+  }
 }
