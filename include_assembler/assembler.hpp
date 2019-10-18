@@ -44,6 +44,9 @@ class Assembler{
      */
     void MakeObjectFile(char* source_code_name);
 
+    //! Error log
+    error_log* _assembling_errors;
+
   private:
     //! SECTION constants identifiers
     static const int NONE = 0;
@@ -132,7 +135,18 @@ class Assembler{
      *  Once a label value mentioned earlier is defined,
      *  its values is substituted by the new defined one
      */
-    int ResolveLabelValue(std::string label);
+    void ResolveLabelValue(std::string label);
+
+    //! AllocSizeManager();
+    /*
+     *  Indicates how many spaces are stored
+     *  to the label defined. A regular ocupies 1.
+     *  At SPACES directives, allocates N given.
+     *  Argument label_reference: indicates
+     *  which object code address occurs the reference.
+     *  Returns the SPACE size allocated.
+     */
+    int AllocSizeManager(int label_reference);
 
 
     //! _pre_file
@@ -159,10 +173,21 @@ class Assembler{
 
     //! _address_offset
     /*! 
-     *  Stores all address offset 
+     *  Stores all address offset.
+     *  First value: offset
+     *  Second value: line occurred it
     */
-    map<int, int> _address_offset;
+   
+    static const  int   OFFSET = 0;
+    static const  int   LINE   = 1;
 
+    map<int, int[2]> _address_offset;
+
+    //! _current_line_string
+    /*! 
+     *  Stores preprocessed code's line to error report
+    */
+    std::string _current_line_string;
 
     //! _instruction_operator
     /*! 
@@ -216,7 +241,7 @@ class Assembler{
     /*!
     *   Stores the current line from the preprocessed code
     */
-    int _current_line = 0;
+    int _current_line_number = 0;
 
 };
 

@@ -11,6 +11,7 @@ Assembler::Assembler(char* preprocessed_code_name){
   // Tables initialization
   this->_instruction_table = new instruction_table();
   this->_symbol_table = new symbol_table();
+  this->_assembling_errors = new error_log();
 
   // Gets the original file name and swap with .pre extention
   std::regex name_regex("(.*)(.asm)");  
@@ -65,6 +66,7 @@ Assembler::Assembler(char* preprocessed_code_name){
 Assembler::~Assembler(){
   delete this->_instruction_table;
   delete this->_symbol_table;
+  delete this->_assembling_errors;
 }
 
 ///////////////////////////////////
@@ -122,6 +124,13 @@ void Assembler::Assembling(){
   for(preprocessed_code_line = this->_pre_file.begin();
       preprocessed_code_line < this->_pre_file.end();
       preprocessed_code_line++) {    
+
+      // Steps one line from preprocessed code
+      this->_current_line_number++;
+
+      // Stores the current line processed
+      this->_current_line_string = *preprocessed_code_line;
+      
                         //////////////////////////////////////////////
                         //**   Identify Label at beginning
                         //////////////////////////////////////////////
@@ -132,8 +141,12 @@ void Assembler::Assembling(){
     label_definition = std::regex_search (*preprocessed_code_line,
                         matches,label_regex);
 
+
+    // Label
     this->_instruction_operand_1 = matches[1].str() + matches[2].str();
 
+    // Operation
+    this->_instruction_operand_2 = matches[5].str();
 
     if(label_definition) {
       *preprocessed_code_line = std::regex_replace (*preprocessed_code_line,label_regex,"$5");
@@ -152,8 +165,7 @@ void Assembler::Assembling(){
     is_a_COPY_instruction = false;
     is_a_STOP_instruction = false;
 
-    // Steps one line from preprocessed code
-    this->_current_line++;
+
         
     //////////////////////////////////
     //**   SECTION TEXT identifier ---
@@ -480,11 +492,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
     
       // Store labels offset 
       if(this->_operand_1_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       // Operand 1
@@ -498,11 +512,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
       // Store labels offset 
       if(this->_operand_2_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_2_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_2_offset); 
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number; 
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       // Operand 2
@@ -512,7 +528,7 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
                                 label_value); 
       this->_symbol_table->set_list_address(operand2, current_object_code_address);
 
-    }
+    } //if
 
     // Command located in DATA type and opcode not found, 
     // that means a directive
@@ -546,8 +562,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
       
       default:
         break;
-      }
-    }
+      } // switch
+    }// else if
 
     else {
 
@@ -586,11 +602,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
 
       // Store labels offset 
       if(this->_operand_1_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_1_offset);
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       label_value = to_string(LabelIdentifier(operand1, LABEL_OPERAND));
@@ -740,11 +758,14 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       break;
     default:
       break;
-    }
-  }
+    }// switch
+  }// else
+
+  return 0;
 }
 
-int Assembler::ResolveLabelValue(std::string label){
+
+void Assembler::ResolveLabelValue(std::string label){
   // Address at object code. At this function, it's
   // used for location of label at the object code.
   // Must be added to section data because codes are 
@@ -754,7 +775,19 @@ int Assembler::ResolveLabelValue(std::string label){
   // Access last reference to label at object code
   int label_reference = this->_symbol_table->get_list_address(label);
 
+  // Iteration to the next line which reference the label
+  // again.
   int next_label_reference;
+
+  // Indicates the address from the label plus the offset 
+  // from the operand
+  int access_address;
+
+  // Label's size at SPACE command
+  int alloc_size;
+
+  // Preprocessed line that occured the error
+  std::vector<std::string>::iterator error_line;
 
   // Reverses object file vector to cascading
   // value substitution process. Thus, 0 index must be
@@ -762,9 +795,38 @@ int Assembler::ResolveLabelValue(std::string label){
   std::reverse(this->_object_file.begin(),
                this->_object_file.end()); 
 
+  alloc_size = AllocSizeManager(label_reference);
+
   while(label_reference != -1) {
+
     next_label_reference = stoi(this->_object_file[label_reference]);
-    this->_object_file[label_reference] = to_string(label_value + this->_address_offset[label_reference]);
+
+    access_address = label_value + this->_address_offset[label_reference][OFFSET];
+
+    //////////////////////////////////////////////////////////////
+    //**   Label's storage memory access validation(SPACE range)
+    //////////////////////////////////////////////////////////////
+
+    // The offset surpass the alloc maximum, that is alloc-size-1.
+    // At offset 0, it's the base address
+    if(alloc_size - 1 < this->_address_offset[label_reference][OFFSET]){
+
+      error_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
+
+      // ERROR - Out-of-range label access
+      error out_range_error(*error_line,
+                            this->_address_offset[label_reference][LINE],
+                            error::error_16);
+
+      _assembling_errors->include_error(out_range_error);
+    /* Debug
+    cout<< alloc_size <<endl;
+    cout<<this->_address_offset[label_reference][OFFSET] <<endl;
+    */
+    }
+
+
+    this->_object_file[label_reference] = to_string(access_address);
     label_reference = next_label_reference;
   }
 
@@ -777,4 +839,81 @@ int Assembler::ResolveLabelValue(std::string label){
 
   // Set as defined
   this->_symbol_table->set_definition(label, true);
+}
+
+
+int Assembler::AllocSizeManager(int label_reference){
+
+  // Express SPACE allocated at the directive
+  std::string alloc_size_string = this->_instruction_operand_2;
+
+  // How many bytes SPACE was stored
+  int alloc_size_number;
+
+  // Identifies correspond directive
+  std::smatch space_matches;
+  std::smatch const_matches;
+  
+  std::regex space_regex("(SPACE)(\\s)(\\d+)");
+  std::regex const_regex("(CONST)(\\s)(\\d+)");
+  bool space_command = std::regex_search (this->_current_line_string,
+                      space_matches,space_regex);
+  bool const_command = std::regex_search (this->_current_line_string,
+                      const_matches,const_regex);        
+
+  // Some important details from this directive identify
+  // process:
+  // * If there's no directive valid at this line
+  //   it will treat the command as SPACE by default(a regular
+  //   label declared at the line)
+  //   The invalid directive will be reported at the 
+  //   Assembling() function.
+
+
+  // Store labels alloc size at SPACE command
+  if(space_command){
+    if(alloc_size_string.compare("") != 0) {
+      alloc_size_number = stoi(space_matches[3].str());
+      return alloc_size_number;  
+    }
+
+    else{
+      alloc_size_number = 1;
+      return alloc_size_number;
+    } // else
+  } // if
+
+  // ERROR case - CONST modify operation
+  else if(const_command){
+
+    // Analyse operation at CONST labels
+
+    ////////
+    //******
+    ////////
+
+    /*
+    // Preprocessed line that occured the error
+    std::vector<std::string>::iterator error_line;
+    error_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
+
+    // ERROR - Out-of-range label access
+    error out_range_error(*error_line,
+                          this->_address_offset[label_reference][LINE],
+                          error::error_15);
+
+    _assembling_errors->include_error(out_range_error);
+    */
+
+    alloc_size_number = 1;
+
+    return alloc_size_number;
+  }
+
+
+  // Common Label (just 1 alloc size)
+  else{
+    alloc_size_number = 1;
+    return alloc_size_number;
+  }
 }

@@ -1,3 +1,6 @@
+#ifndef DATA_STRUCTURE_HPP
+#define DATA_STRUCTURE_HPP
+
 #include <string>
 #include <iterator>
 #include <map>
@@ -139,3 +142,4 @@ public:
     }
     void display(int option);
 };
+#endif
