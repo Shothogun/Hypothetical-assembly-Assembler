@@ -86,6 +86,13 @@ class Assembler{
     */
     bool _exists = false;
 
+    //! _SECTION_TEXT_exist
+    /*!
+     *
+     * Indicates if a text section was found 
+    */ 
+    bool _SECTION_TEXT_exist = false;
+
     //! GenerateObjCode(std::string instruction);
     /*! 
      *  Produces a STOP object code instruction
@@ -111,7 +118,7 @@ class Assembler{
       *
       * Identify and validate tokens 
       */
-    bool Scanner(std::string source_code_line, int line_number); 
+    bool Scanner(); 
 
     //! IdentifyCommandType();
     /*
@@ -177,6 +184,27 @@ class Assembler{
     */
     std::vector<std::string> _section_data_commands;
 
+    //! _DIV_operands;
+    /*!
+     *  Store labels of rows containing a DIV instruction
+     * 
+    */
+    std::map<std::string, int> _DIV_operands;
+    
+    //! _DIV_code_line;
+    /*!
+     *  Stores the code's line containing a DIV instruction 
+     * 
+    */
+    std::vector<std::string> _DIV_code_line;
+    
+    //! _DIV_line_number;
+    /*!
+     *  Stores the number of rows containing a DIV instruction 
+     * 
+    */
+    std::vector<int>  _DIV_line_number;
+
     //! _address_offset
     /*! 
      *  Stores all address offset.
@@ -195,10 +223,16 @@ class Assembler{
     */
     std::string _current_line_string;
 
+    //! _current_label
+    /*!
+      * Store last label found 
+    */
+    std::string _current_label;
     //! _instruction_operator
     /*! 
      *  Stores the command operator from preprocessed line instruction
     */
+
     std::string _instruction_operator;
 
     //! _instruction_operand_1

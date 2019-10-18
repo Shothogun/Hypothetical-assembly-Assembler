@@ -107,6 +107,9 @@ void Assembler::Assembling(){
   // Indicates that is a label definition
   bool label_definition = false;
 
+  // Indicates the occurrence number of the DIV instruction
+  int DIV_occurrence_number = 0;
+
   // Array composed by the matches found in the regex search
   std::smatch matches;
 
@@ -130,7 +133,13 @@ void Assembler::Assembling(){
 
       // Stores the current line processed
       this->_current_line_string = *preprocessed_code_line;
-      
+
+                        //////////////////////////////////////////////
+                        //**   Identify and Validate Tokens
+                        //////////////////////////////////////////////
+
+      Scanner();
+
                         //////////////////////////////////////////////
                         //**   Identify Label at beginning
                         //////////////////////////////////////////////
@@ -141,16 +150,19 @@ void Assembler::Assembling(){
     label_definition = std::regex_search (*preprocessed_code_line,
                         matches,label_regex);
 
-
+    /*
     // Label
     this->_instruction_operand_1 = matches[1].str() + matches[2].str();
 
     // Operation
     this->_instruction_operand_2 = matches[5].str();
+    */
+    // Label 
+    this->_current_label = matches[1].str() + matches[2].str();
 
     if(label_definition) {
       *preprocessed_code_line = std::regex_replace (*preprocessed_code_line,label_regex,"$5");
-      LabelIdentifier(this->_instruction_operand_1, LABEL_DEFINITION);
+      LabelIdentifier(this->_current_label, LABEL_DEFINITION);
       /* Debug
       std::cout << this->_instruction_operand_1 << std::endl;
       */      
@@ -186,6 +198,8 @@ void Assembler::Assembling(){
 
       // Resets its value, since it's SECTION TEXT
       is_a_SECTION_DATA = false;
+
+      this->_SECTION_TEXT_exist = true;
 
       // Indicates the line's command kind
       this->_line_type_identifier = SECTION_TYPE;
@@ -242,8 +256,24 @@ void Assembler::Assembling(){
       this->_instruction_operand_1 = matches[3].str() + matches[4].str();
       this->_operand_1_offset = matches[6].str();
 
+      // Stores information about the occurrence of the 
+      // DIV instruction to report division by zero errors
+      if(this->_instruction_operator == "DIV"){
+        
+        this->_DIV_operands.insert(pair<string, int>(this->_instruction_operand_1, DIV_occurrence_number));
+        this->_DIV_code_line.insert(this->_DIV_code_line.end(), this->_current_line_string);
+        this->_DIV_line_number.insert(this->_DIV_line_number.end(), this->_current_line_number);
+        DIV_occurrence_number++;
+      }
+
       // Indicates the line's command kind
       this->_line_type_identifier = REGULAR_TYPE;
+
+      // Check if it's in the correct section
+      if(this->_section_identifier != TEXT){
+        error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+        this->_assembling_errors->include_error(wrong_section_error);
+      }
     }
 
     //////////////////////////////////////////////
@@ -286,7 +316,14 @@ void Assembler::Assembling(){
 
       // Indicates the line's command kind
       this->_line_type_identifier = COPY_TYPE;
-    }                                              
+
+      // Check if it's in the correct section
+      if(this->_section_identifier != TEXT){
+        error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+        this->_assembling_errors->include_error(wrong_section_error);
+      }
+
+    }          
 
     //////////////////////////////////////////////
     //**   Identify STOP -------------------------
@@ -306,6 +343,13 @@ void Assembler::Assembling(){
 
       // Indicates the line's command kind
       this->_line_type_identifier = STOP_TYPE;
+
+      // Check if it's in the correct section
+      if(this->_section_identifier != TEXT){
+        error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+        this->_assembling_errors->include_error(wrong_section_error);
+      }
+
     }  
 
     //////////////////////////////////////////////
@@ -335,6 +379,12 @@ void Assembler::Assembling(){
       std::cout<< "Directive: " << this->_instruction_operator << std::endl;
       std::cout<< "Number   : " << this->_instruction_operand_2 << std::endl;
       */
+
+      // Check if it's in the correct section
+      if(this->_section_identifier != DATA){
+        error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+        this->_assembling_errors->include_error(wrong_section_error);
+      }
     }  
 
     //////////////////////////////////////////////
@@ -364,10 +414,34 @@ void Assembler::Assembling(){
       std::cout<< "Directive: " << this->_instruction_operator << std::endl;
       std::cout<< "Number  : " << this->_instruction_operand_2 << std::endl;
       */
+
+      // Check CONST 0
+      if(std::stoi(this->_instruction_operand_2) == 0){
+        map<std::string, int>::iterator itr;
+        // Cycles through the vector of labels used by the DIV instruction
+        for(itr = this->_DIV_operands.begin(); itr!=this->_DIV_operands.end(); itr++){
+          // Notifies an error if the DIV statement uses the LABEL assigned to CONST 0
+          if(itr->first == this->_current_label){
+            error div_zero_error(this->_DIV_code_line[itr->second], this->_DIV_line_number[itr->second],error::error_07);
+            this->_assembling_errors->include_error(div_zero_error);
+            // Replaces the operand of CONST for 1
+            this->_instruction_operand_2 = "1";
+            break;
+          }
+        }
+      }
+
+      // Check if it's in the correct section
+      if(this->_section_identifier != DATA){
+        error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+        this->_assembling_errors->include_error(wrong_section_error);
+      }
+
     }
                         //////////////////////////////////////////////
                         //**   ERROR verify --------------------------
                         //////////////////////////////////////////////
+
 
                         //////////////////////////////////////////////
                         //**   Produce the machine code --------------
@@ -385,6 +459,11 @@ void Assembler::Assembling(){
 
   } // for 
 
+  // Notifies an error if SECTION TEXT was not found
+  if(!this->_SECTION_TEXT_exist){
+    error missing_TEXT_error("", 0, error::error_12);
+    this->_assembling_errors->include_error(missing_TEXT_error);
+  }
                         //////////////////////////////////////////////
                         //**   Append SECTION DATA in object file-----
                         //////////////////////////////////////////////
@@ -419,17 +498,16 @@ void Assembler::Assembling(){
   */
 }
 
-bool Assembler::Scanner(std::string source_code_line, int line_number){
+bool Assembler::Scanner(){
   
     const int MAX_SIZE_TOKEN = 50;
     std::smatch matches;
     std::regex valid_token("(^\\d+$)|(^([a-z]|[A-Z]|_)(\\w+|\\d+)*$)");
     // Characters that separate tokens
-    std::regex taps("\\s+|,|:");
-    regex_token_iterator<string::iterator> itr(source_code_line.begin(), source_code_line.end(), taps, -1);
+    std::regex taps("\\s+|,|:|\\+");
+    regex_token_iterator<string::iterator> itr(this->_current_line_string.begin(), this->_current_line_string.end(), taps, -1);
     regex_token_iterator<string::iterator> end;
     string token;
-    bool invalid_token = false;
     // Cycles through all tokens identified on the line.
     while (itr != end){
       token = *itr;
@@ -437,7 +515,7 @@ bool Assembler::Scanner(std::string source_code_line, int line_number){
         // Checks if it is a valid token
         // If not, notify an error
         if(!std::regex_match(token, matches, valid_token) || (token.length() > MAX_SIZE_TOKEN)){
-          error error(source_code_line, line_number, error::error_10);
+          error error(this->_current_line_string, this->_current_line_number, error::error_10);
           _assembling_errors->include_error(error);
           return false;
         }
