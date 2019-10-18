@@ -106,6 +106,12 @@ class Assembler{
      */
     void GenerateObjCode(std::string instruction, std::string operand1,
                          std::string operand2);
+    //! Scanner(std::string source_code_line, int line_number)
+    /*! 
+      *
+      * Identify and validate tokens 
+      */
+    bool Scanner(std::string source_code_line, int line_number); 
 
     //! IdentifyCommandType();
     /*

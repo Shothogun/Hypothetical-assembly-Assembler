@@ -419,6 +419,34 @@ void Assembler::Assembling(){
   */
 }
 
+bool Assembler::Scanner(std::string source_code_line, int line_number){
+  
+    const int MAX_SIZE_TOKEN = 50;
+    std::smatch matches;
+    std::regex valid_token("(^\\d+$)|(^([a-z]|[A-Z]|_)(\\w+|\\d+)*$)");
+    // Characters that separate tokens
+    std::regex taps("\\s+|,|:");
+    regex_token_iterator<string::iterator> itr(source_code_line.begin(), source_code_line.end(), taps, -1);
+    regex_token_iterator<string::iterator> end;
+    string token;
+    bool invalid_token = false;
+    // Cycles through all tokens identified on the line.
+    while (itr != end){
+      token = *itr;
+      if(token != ""){
+        // Checks if it is a valid token
+        // If not, notify an error
+        if(!std::regex_match(token, matches, valid_token) || (token.length() > MAX_SIZE_TOKEN)){
+          error error(source_code_line, line_number, error::error_10);
+          _assembling_errors->include_error(error);
+          return false;
+        }
+      }
+      itr++;
+    }
+    return true;
+}
+
 void Assembler::IdentifyCommandType(){
   switch (this->_line_type_identifier){
     case REGULAR_TYPE:
