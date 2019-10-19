@@ -325,8 +325,10 @@ void Assembler::Parser(std::string code_line ){
   // Indicates that is a label definition
   bool label_definition = false;
 
+  bool two_label_definition = false;
+
   // Array composed by the matches found in the regex search
-  std::smatch matches;
+  std::smatch matches, matches2;
 
   // String representing the label being stored
   // in the SPACE directive
@@ -354,8 +356,11 @@ void Assembler::Parser(std::string code_line ){
   // Identifies, eliminates from the code
   // and stores its value into the symbol table
   std::regex label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(.*)");
+  std::regex two_label_regex("((^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)\\s*){2,}(\\s)(.*)");
   label_definition = std::regex_search (code_line,
                       matches,label_regex);
+
+  two_label_definition = std::regex_search(code_line, matches2, two_label_regex);
 
   /*
   // Label
@@ -365,9 +370,23 @@ void Assembler::Parser(std::string code_line ){
   this->_instruction_operand_2 = matches[5].str();
   */
   // Label 
-  this->_current_label = matches[1].str() + matches[2].str();
 
-  if(label_definition) {
+  //////////////////////////////////////////////
+  //**   ERROR CASE ----------------------------
+  //////////////////////////////////////////////    
+  
+  // Check two labels in the same line
+  if(two_label_definition){
+    // Consider the last label
+    // and notify two labels error
+    this->_current_label = matches2[3].str() + matches2[4].str();
+    code_line = std::regex_replace (code_line,two_label_regex,"$5");
+    LabelIdentifier(this->_current_label, LABEL_DEFINITION);
+    error two_labels_error(this->_current_line_string, this->_current_line_number, error::error_11);
+    this->_assembling_errors->include_error(two_labels_error);
+  }
+  else if(label_definition) {
+    this->_current_label = matches[1].str() + matches[2].str();
     code_line = std::regex_replace (code_line,label_regex,"$5");
     LabelIdentifier(this->_current_label, LABEL_DEFINITION);
     /* Debug

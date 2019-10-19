@@ -1,31 +1,13 @@
 	TRIANGULO: EQU 1
-	_Abobrinhas: EQU 2
-
-
-		
-SECTION DATA
-	b:		sPace
-	b:		SPACE 		2
-	R:		SPACE
-	ZERO:	CONST		0
 
 
 SECTION TEXT
-
-
-		INPUT		B   ; isso aqui é um triangulo
-	; isso aqui é um triangulo
-		INPUT		b
-		JMP		H
-	A:	JMPZ		Bisc
-	A:	JMPP		B
-		JMPN		H
+		INPUT		B
+		INPUT		H
 		LOAD		B
-		load		B
-		MULT		zano
-		COPY		Bist 	,						H
-		IF triangulo
-		DIV		ZERO
+		MULT		H
+		IF TRIANGULO
+		DIV		DOIS		
 		STORE		R
 		OUTPUT	R
 		STOP
@@ -33,8 +15,8 @@ SECTION TEXT
 
 
 
-
-			    
-
-
-
+SECTION DATA
+	B:		SPACE
+	H:		SPACE
+	R:		SPACE
+	DOIS:	CONST		2
