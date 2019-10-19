@@ -361,11 +361,11 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify regular instruction ---------
   //////////////////////////////////////////////
   
-  std::regex INSTRUCTION_regex("(\\w+)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+  std::regex INSTRUCTION_regex("(ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT)(\\s)(\\w+)(\\+*)(\\d*)");
 
   // Seek the instruction match
   is_a_regular_instruction = std::regex_search (code_line,
-                                            matches,INSTRUCTION_regex);  
+                                            matches,INSTRUCTION_regex);
 
   // It must ignore COPY instruction and SECTION directive
   if(is_a_regular_instruction && 
@@ -501,6 +501,17 @@ void Assembler::Parser(std::string code_line ){
       this->_assembling_errors->include_error(wrong_section_error);
     }
 
+  }
+
+
+  // Code's line is at SECTION TEXT and 
+  // has no valid instruction
+  if((is_a_regular_instruction == false && 
+     is_a_STOP_instruction == false &&
+     is_a_COPY_instruction == false)
+     && this->_section_identifier == TEXT)
+  {     
+    this->Error5Verify(code_line);
   }
   
   //////////////////////////////////////////////
@@ -1090,6 +1101,29 @@ int Assembler::AllocSizeManager(int label_reference){
     return alloc_size_number;
   }
 }
+
+void Assembler::Error5Verify(std::string code_line) {
+  std::smatch matches;
+  std::regex INSTRUCTION_regex("(SECTION|SPACE|CONST|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT|COPY|STOP)(.*)");
+
+  // Check if begins with a valid instruction
+  bool instruction_exist = std::regex_search (code_line,
+                                            matches,INSTRUCTION_regex);
+
+
+  //////////////////////////////////////////////
+  //**   ERROR CASE ----------------------------
+  //////////////////////////////////////////////   
+
+  if(!instruction_exist){
+    error invalid_instruction(code_line,
+                          this->_current_line_number,
+                          error::error_05);
+
+    _assembling_errors->include_error(invalid_instruction);
+  }
+}
+
 
 void Assembler::Error15Verify(int label_reference){
 

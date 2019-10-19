@@ -169,6 +169,15 @@ class Assembler{
      */
     int AllocSizeManager(int label_reference);
 
+    //! Error5Verify()
+    /*! 
+     *  A method that verifies error 5 type at 
+     *  Parsing process. Check if instruction exist. 
+     *  If not, report error
+    */
+    void Error5Verify(std::string code_line);
+
+
     //! Error15Verify()
     /*! 
      *  A method that verifies error 15 type at 
