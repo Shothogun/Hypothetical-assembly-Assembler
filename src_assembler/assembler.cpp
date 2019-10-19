@@ -1022,12 +1022,12 @@ void Assembler::ResolveLabelValue(std::string label){
     cout<< alloc_size <<endl;
     cout<<this->_address_offset[label_reference][OFFSET] <<endl;
     */
-    }
+    } //if
 
 
     this->_object_file[label_reference] = to_string(access_address);
     label_reference = next_label_reference;
-  }
+  } // while
 
   // Goes back to its standard pattern(inverted list)
   std::reverse(this->_object_file.begin(),
@@ -1085,24 +1085,7 @@ int Assembler::AllocSizeManager(int label_reference){
   // ERROR case - CONST modify operation
   else if(const_command){
 
-    // Analyse operation at CONST labels
-
-    ////////
-    //******
-    ////////
-
-    /*
-    // Preprocessed line that occured the error
-    std::vector<std::string>::iterator error_line;
-    error_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
-
-    // ERROR - Out-of-range label access
-    error out_range_error(*error_line,
-                          this->_address_offset[label_reference][LINE],
-                          error::error_15);
-
-    _assembling_errors->include_error(out_range_error);
-    */
+    this->Error15Verify(label_reference);
 
     alloc_size_number = 1;
 
@@ -1115,4 +1098,68 @@ int Assembler::AllocSizeManager(int label_reference){
     alloc_size_number = 1;
     return alloc_size_number;
   }
+}
+
+void Assembler::Error15Verify(int label_reference){
+
+    // Line where the refence occurs
+    std::vector<std::string>::iterator label_reference_line;
+    label_reference_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
+
+    // Identify the declared label
+    std::smatch label_match;
+    std::regex label_regex("([a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(CONST)(\\s)(\\d+)");
+    std::regex_search (this->_current_line_string,
+                        label_match,label_regex);
+
+    // Declared label as CONST
+    std::string label = label_match[1].str()+label_match[2].str();
+
+    // Analyse operation at CONST labels
+    std::smatch modify_const_match;
+    
+    std::regex copy_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+    std::regex store_regex("(STORE)(\\s)(\\w+)");
+    std::regex input_regex("(INPUT)(\\s)(\\w+)");
+
+    bool store_command = std::regex_search (*label_reference_line,
+                        modify_const_match,store_regex);
+
+    bool input_command = std::regex_search (*label_reference_line,
+                        modify_const_match,input_regex);
+
+    bool copy_command = std::regex_search (*label_reference_line,
+                    modify_const_match,copy_regex);
+
+    std::string destiny_operand = modify_const_match[3].str()+modify_const_match[4].str();
+
+    // Verifies if destiny operand is the CONST label
+    if(copy_command){
+
+      // It's the CONST label as operand
+      if(label.compare(destiny_operand) == 0){
+        copy_command = true;
+      }
+
+      // CONST label is operand. Don't modify
+      // it's value
+      else
+      {
+        copy_command = false;
+      }
+      
+    }                       
+          
+    if(copy_command || store_command || input_command == true) {
+      // Preprocessed line that occured the error
+      std::vector<std::string>::iterator error_line;
+      error_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
+
+      // ERROR - Out-of-range label access
+      error const_modify_error(*error_line,
+                            this->_address_offset[label_reference][LINE],
+                            error::error_15);
+
+      _assembling_errors->include_error(const_modify_error);
+    }
 }

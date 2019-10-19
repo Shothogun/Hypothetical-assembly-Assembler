@@ -181,7 +181,7 @@ void Preprocessor::Preprocessing(){
     // 10: Plus character
     // 11: A digit
 
-    std::regex COPY_regex("(COPY)(\\s)(\\w+)(\\+*)(\\d*)(\\s)(,)(\\s)(\\w+)(\\+*)(\\d*)");  
+    std::regex COPY_regex("(COPY)(\\s)(\\w+)(\\+*)(\\d*)(\\s*)(,)(\\s*)(\\w+)(\\+*)(\\d*)");  
 
     // Get the COPY operator and its operands to format 
     // to the default pattern(COPY operand_1,operand_2)
