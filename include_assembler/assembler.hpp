@@ -117,9 +117,15 @@ class Assembler{
     /*! 
       *
       * Identify and validate tokens 
-      */
+    */
     void Scanner(); 
-
+    
+    //! Parser(std::string code_line)
+    /*! 
+      *
+      * Identify and validate operators and 
+      * operands according to language syntax
+    */
     void Parser(std::string code_line);
 
     //! IdentifyCommandType();
@@ -179,10 +185,9 @@ class Assembler{
 
     //! _section_data_preprocessed
     /*!
-     *
+     * Stores code from date section for later evaluation
      * 
     */
-
     std::vector<std::string> _section_data_preprocessed;
     //! _section_data_commands
     /*! 
@@ -197,7 +202,7 @@ class Assembler{
      *  Store labels of rows containing a DIV instruction
      * 
     */
-    std::map<std::string, int> _DIV_operands;
+    std::map<int, std::string> _DIV_operands;
     
     //! _DIV_code_line;
     /*!
@@ -213,26 +218,50 @@ class Assembler{
     */
     std::vector<int>  _DIV_line_number;
 
+    //! _JMP_operands
+    /*!
+     * Store labels of rows containing a DIV instruction
+     *
+    */
+   std::map<int, std::string> _JMP_operands;
+
+    //! _JMP_code_line
+    /*!
+     * Stores the code's line containing a DIV instruction 
+     *
+    */
+   std::vector<std::string> _JMP_code_line;
+
+    //! _JMP_line_number
+    /*!
+     * Stores the number of rows containing a DIV instruction 
+     *
+    */
+   std::vector<int>  _JMP_line_number;
+
+    //!
+    /*!
+     * Indicates the occurrence number of the DIV instruction
+     *
+    */
+    int DIV_occurrence_number = 0;
+
+    //! 
+    /*! 
+     * Indicates the occurrence number of the JMP instructions
+     *
+    */
+    int JMP_occurrence_number = 0;
+   
+    static const  int   OFFSET = 0;
+    static const  int   LINE   = 1;
+
     //! _address_offset
     /*! 
      *  Stores all address offset.
      *  First value: offset
      *  Second value: line occurred it
     */
-
-   std::map<std::string, int> _JMP_operands;
-   std::vector<std::string> _JMP_code_line;
-   std::vector<int>  _JMP_line_number;
-
-    // Indicates the occurrence number of the DIV instruction
-    int DIV_occurrence_number = 0;
-
-    // Indicates the occurrence number of the JMP instructions
-    int JMP_occurrence_number = 0;
-   
-    static const  int   OFFSET = 0;
-    static const  int   LINE   = 1;
-
     map<int, int[2]> _address_offset;
 
     //! _current_line_string

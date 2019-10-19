@@ -196,6 +196,10 @@ void Assembler::Assembling(){
   
   }
 
+        //////////////////////////////////////////////
+        //**   ERROR CASE ----------------------------
+        //////////////////////////////////////////////   
+
   // Notifies an error if SECTION TEXT was not found
   if(!this->_SECTION_TEXT_exist){
     error missing_TEXT_error("", 0, error::error_12);
@@ -249,6 +253,11 @@ void Assembler::Scanner(){
     while (itr != end){
       token = *itr;
       if(token != ""){
+
+        //////////////////////////////////////////////
+        //**   ERROR CASE ----------------------------
+        //////////////////////////////////////////////      
+
         // Checks if it is a valid token
         // If not, notify an error
         if(!std::regex_match(token, matches, valid_token) || (token.length() > MAX_SIZE_TOKEN)){
@@ -374,7 +383,7 @@ void Assembler::Parser(std::string code_line ){
     // DIV instruction to report division by zero errors
     if(this->_instruction_operator == "DIV"){
       
-      this->_DIV_operands.insert(pair<string, int>(this->_instruction_operand_1, this->DIV_occurrence_number));
+      this->_DIV_operands.insert(pair<int, std::string>(this->DIV_occurrence_number, this->_instruction_operand_1));
       this->_DIV_code_line.insert(this->_DIV_code_line.end(), this->_current_line_string);
       this->_DIV_line_number.insert(this->_DIV_line_number.end(), this->_current_line_number);
       this->DIV_occurrence_number++;
@@ -382,10 +391,10 @@ void Assembler::Parser(std::string code_line ){
 
     // Stores information about the occurrence of the 
     // JMP instruction to report division by zero errors
-    std::regex JMP_regex("\bJMP");
+    std::regex JMP_regex("\\bJMP");
     if(std::regex_search(this->_instruction_operator, matches, JMP_regex)){
       
-      this->_JMP_operands.insert(pair<string, int>(this->_instruction_operand_1, this->JMP_occurrence_number));
+      this->_JMP_operands.insert(pair<int, std::string>(this->JMP_occurrence_number, this->_instruction_operand_1));
       this->_JMP_code_line.insert(this->_JMP_code_line.end(), this->_current_line_string);
       this->_JMP_line_number.insert(this->_JMP_line_number.end(), this->_current_line_number);
       this->JMP_occurrence_number++;
@@ -393,6 +402,10 @@ void Assembler::Parser(std::string code_line ){
 
     // Indicates the line's command kind
     this->_line_type_identifier = REGULAR_TYPE;
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////        
 
     // Check if it's in the correct section
     if(this->_section_identifier != TEXT){
@@ -442,6 +455,10 @@ void Assembler::Parser(std::string code_line ){
     // Indicates the line's command kind
     this->_line_type_identifier = COPY_TYPE;
 
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////        
+
     // Check if it's in the correct section
     if(this->_section_identifier != TEXT){
       error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
@@ -468,6 +485,10 @@ void Assembler::Parser(std::string code_line ){
 
     // Indicates the line's command kind
     this->_line_type_identifier = STOP_TYPE;
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////        
 
     // Check if it's in the correct section
     if(this->_section_identifier != TEXT){
@@ -505,6 +526,10 @@ void Assembler::Parser(std::string code_line ){
     std::cout<< "Number   : " << this->_instruction_operand_2 << std::endl;
     */
 
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////    
+    
     // Check if it's in the correct section
     if(this->_section_identifier != DATA){
       error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
@@ -540,21 +565,28 @@ void Assembler::Parser(std::string code_line ){
     std::cout<< "Number  : " << this->_instruction_operand_2 << std::endl;
     */
 
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////    
+
     // Check CONST 0
     if(std::stoi(this->_instruction_operand_2) == 0){
-      map<std::string, int>::iterator itr;
+      map<int, std::string>::iterator itr;
       // Cycles through the vector of labels used by the DIV instruction
       for(itr = this->_DIV_operands.begin(); itr!=this->_DIV_operands.end(); itr++){
         // Notifies an error if the DIV statement uses the LABEL assigned to CONST 0
-        if(itr->first == this->_current_label){
-          error div_zero_error(this->_DIV_code_line[itr->second], this->_DIV_line_number[itr->second],error::error_07);
+        if(itr->second == this->_current_label){
+          error div_zero_error(this->_DIV_code_line[itr->first], this->_DIV_line_number[itr->first],error::error_07);
           this->_assembling_errors->include_error(div_zero_error);
           // Replaces the operand of CONST for 1
           this->_instruction_operand_2 = "1";
-          break;
         }
       }
     }
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////        
 
     // Check if it's in the correct section
     if(this->_section_identifier != DATA){
@@ -922,6 +954,23 @@ void Assembler::ResolveLabelValue(std::string label){
   // stored in differents vectors.
   int label_value = this->_object_file.size() + this->_section_data_commands.size();
 
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////      
+
+  // Check JMP for SECTION DATA
+  if(label_value > this->_object_file.size()){
+    map<int, std::string>::iterator itr;
+    // Cycles through the vector of labels used by the JMP instructions
+    for(itr = this->_JMP_operands.begin(); itr!=this->_JMP_operands.end(); itr++){
+      // Notifies an error if JMP goes to SECTION DATA
+      if(itr->second == label){
+        error JMP_wrong_section_error(this->_JMP_code_line[itr->first], this->_JMP_line_number[itr->first],error::error_03);
+        this->_assembling_errors->include_error(JMP_wrong_section_error);
+      }
+    }
+  }
+  
   // Access last reference to label at object code
   int label_reference = this->_symbol_table->get_list_address(label);
 
