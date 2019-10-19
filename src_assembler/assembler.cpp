@@ -80,6 +80,8 @@ void Assembler::Assembling(){
   // SECTION DATA code's line iterated
   std::vector<std::string>::iterator section_data_values;
 
+  //
+  bool is_SECTION = false;
 
   // Boolean value that express SECTION TEXT
   // detection at the code line
@@ -97,8 +99,12 @@ void Assembler::Assembling(){
   //////////////////////////////////  
   for(preprocessed_code_line = this->_pre_file.begin();
       preprocessed_code_line < this->_pre_file.end();
-      preprocessed_code_line++) {    
-    
+      preprocessed_code_line++) { 
+
+    // Check if it's a section
+    std::regex SECTION_regex("(SECTION)(\\s)(.*)");
+    is_SECTION = std::regex_search(*preprocessed_code_line, matches, SECTION_regex);
+
     //////////////////////////////////
     //**   SECTION TEXT identifier ---
     ////////////////////////////////// 
@@ -149,6 +155,18 @@ void Assembler::Assembling(){
       this->_line_type_identifier = SECTION_TYPE;
     }
 
+        //////////////////////////////////////////////
+        //**   ERROR CASE ----------------------------
+        //////////////////////////////////////////////       
+
+    // Check invalid section
+    if(is_SECTION && !is_a_SECTION_DATA && !is_a_SECTION_TEXT){
+      this->_section_identifier = NONE;
+      error invalid_section_error(*preprocessed_code_line, this->_current_line_number, error::error_13);
+      this->_assembling_errors->include_error(invalid_section_error);
+    }
+
+    // Skips date section for further evaluation
     if(this->_section_identifier == DATA){
       this->_section_data_preprocessed.insert(_section_data_preprocessed.end(),*preprocessed_code_line);
       continue;

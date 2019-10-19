@@ -10,7 +10,7 @@ SECTION DATA
 	ZERO:	CONST		0
 
 
-SECTION TEXT
+SECTION
 
 
 		INPUT		B   ; isso aqui é um triangulo
