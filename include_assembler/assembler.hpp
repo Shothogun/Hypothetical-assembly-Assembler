@@ -137,7 +137,7 @@ class Assembler{
      */
     void ResolveLabelValue(std::string label);
 
-    //! AllocSizeManager();
+    //! AllocSizeManager()
     /*
      *  Indicates how many spaces are stored
      *  to the label defined. A regular ocupies 1.
@@ -147,6 +147,13 @@ class Assembler{
      *  Returns the SPACE size allocated.
      */
     int AllocSizeManager(int label_reference);
+
+    //! Error15Verify()
+    /*! 
+     *  A method that verifies error 15 type at 
+     *  label value resolving process.
+    */
+    void Error15Verify(int label_reference);
 
 
     //! _pre_file

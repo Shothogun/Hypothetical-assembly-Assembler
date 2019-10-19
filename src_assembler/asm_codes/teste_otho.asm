@@ -16,6 +16,7 @@ SECTION TEXT
 		COPY		B +1 	,						H    + 2
 		IF triangulo
 		DIV		DOIS +						1
+		COPY		DOIS,   	B		
 		STORE		R
 		OUTPUT	R
 		STOP
