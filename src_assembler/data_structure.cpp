@@ -129,6 +129,24 @@ void symbol_table::PrintTable(){
          << it->second[2] << '\n';
 }
 
+vector<string> symbol_table::search_not_defined(){
+    vector<string> not_defined;
+    for(itr=table.begin(); itr!= table.end(); itr++){
+        if(!itr->second[DEF]){
+            not_defined.insert(not_defined.end(), itr->first);
+        }
+    }
+    return not_defined;
+}
+
+// CLASS LABER_OCCURRENCE
+
+label_occurrence::label_occurrence(string label, string code_line, int line_number){
+    this->label = label;
+    this->code_line = code_line;
+    this->line_number = line_number;
+}
+
 // CLASS ERROR
 
 map<int, string> error::error_details = {

@@ -151,6 +151,14 @@ class Assembler{
      */
     int LabelIdentifier(std::string label, int use_type);
 
+    //! StoreLabelOccurrence(std::string label)
+    /*
+     *  
+     *  
+     */
+
+    void StoreLabelOperandOccurrence(std::string label_operand);
+
     //! ResolveLabelValue(std::string label);
     /*
      *  Once a label value mentioned earlier is defined,
@@ -204,61 +212,26 @@ class Assembler{
     */
     std::vector<std::string> _section_data_commands;
 
-    //! _DIV_operands;
+    //!
     /*!
-     *  Store labels of rows containing a DIV instruction
+     *
      * 
     */
-    std::map<int, std::string> _DIV_operands;
-    
-    //! _DIV_code_line;
-    /*!
-     *  Stores the code's line containing a DIV instruction 
-     * 
-    */
-    std::vector<std::string> _DIV_code_line;
-    
-    //! _DIV_line_number;
-    /*!
-     *  Stores the number of rows containing a DIV instruction 
-     * 
-    */
-    std::vector<int>  _DIV_line_number;
-
-    //! _JMP_operands
-    /*!
-     * Store labels of rows containing a DIV instruction
-     *
-    */
-   std::map<int, std::string> _JMP_operands;
-
-    //! _JMP_code_line
-    /*!
-     * Stores the code's line containing a DIV instruction 
-     *
-    */
-   std::vector<std::string> _JMP_code_line;
-
-    //! _JMP_line_number
-    /*!
-     * Stores the number of rows containing a DIV instruction 
-     *
-    */
-   std::vector<int>  _JMP_line_number;
+    std::vector<label_occurrence> _JMP_label_occurrences;
 
     //!
     /*!
-     * Indicates the occurrence number of the DIV instruction
      *
-    */
-    int DIV_occurrence_number = 0;
+     * 
+    */ 
+    std::vector<label_occurrence> _DIV_label_occurrences;
 
-    //! 
-    /*! 
-     * Indicates the occurrence number of the JMP instructions
+    //!
+    /*!
      *
-    */
-    int JMP_occurrence_number = 0;
+     * 
+    */ 
+    std::vector<label_occurrence> _label_occurrences;
    
     static const  int   OFFSET = 0;
     static const  int   LINE   = 1;

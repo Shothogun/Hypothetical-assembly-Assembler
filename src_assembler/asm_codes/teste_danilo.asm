@@ -10,24 +10,24 @@ SECTION DATA
 	ZERO:	CONST		0
 
 
-SECTION
+SECTION TEXT
 
 
 		INPUT		B   ; isso aqui é um triangulo
 	; isso aqui é um triangulo
-		INPUT		H
+		INPUT		b
+		JMP		H
+		JMPZ		Bisc
+		JMPP		B
+		JMPN		H
 		LOAD		B
-		JMPN	H
-		jmpp	r	
-		jmpz	h
 		load		B
-	MULT		H
-		COPY		B 	,						H
+		MULT		zano
+		COPY		Bist 	,						H
 		IF triangulo
 		DIV		ZERO
 		STORE		R
 		OUTPUT	R
-		JMP	H
 		STOP
 
 

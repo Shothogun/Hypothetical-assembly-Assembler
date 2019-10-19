@@ -71,6 +71,37 @@ public:
 
     // Tells whether an identifier is present in the table or not
     bool search(string identifier);
+
+    vector<string> search_not_defined();
+};
+
+// This class stores information about an occurrence of a label
+class label_occurrence{
+private:
+    string code_line;
+    int line_number;
+    string label;
+public:
+    label_occurrence(string label, string code_line, int line_number);
+
+    void set_label(string label){
+        this->label = label;
+    }
+    void set_code_line(string code_line){
+        this->code_line = code_line;
+    }
+    void set_line_number(int line_number){
+        this->line_number = line_number;
+    }
+    string get_label(){
+        return this->label;
+    }
+    string get_code_line(){
+        return this->code_line;
+    }
+    int get_line_number(){
+        return this->line_number;
+    }
 };
 
 //This class implements the error type and contains the line where the error occurred,

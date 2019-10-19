@@ -214,6 +214,21 @@ void Assembler::Assembling(){
   
   }
 
+  vector<string> not_defined = this->_symbol_table->search_not_defined();
+  vector<string>::iterator itr1;
+  vector<label_occurrence>::iterator itr2;
+
+  
+  for(itr1=not_defined.begin(); itr1!=not_defined.end(); itr1++){
+    for(itr2=this->_label_occurrences.begin(); itr2!=this->_label_occurrences.end(); itr2++){
+      if(*itr1 == itr2->get_label()){
+        error undefined_label_error(itr2->get_code_line(), itr2->get_line_number(), error::error_00);
+        this->_assembling_errors->include_error(undefined_label_error);
+      }
+    }  
+  }
+  
+
         //////////////////////////////////////////////
         //**   ERROR CASE ----------------------------
         //////////////////////////////////////////////   
@@ -397,26 +412,8 @@ void Assembler::Parser(std::string code_line ){
     this->_instruction_operand_1 = matches[3].str() + matches[4].str();
     this->_operand_1_offset = matches[6].str();
 
-    // Stores information about the occurrence of the 
-    // DIV instruction to report division by zero errors
-    if(this->_instruction_operator == "DIV"){
-      
-      this->_DIV_operands.insert(pair<int, std::string>(this->DIV_occurrence_number, this->_instruction_operand_1));
-      this->_DIV_code_line.insert(this->_DIV_code_line.end(), this->_current_line_string);
-      this->_DIV_line_number.insert(this->_DIV_line_number.end(), this->_current_line_number);
-      this->DIV_occurrence_number++;
-    }
 
-    // Stores information about the occurrence of the 
-    // JMP instruction to report division by zero errors
-    std::regex JMP_regex("\\bJMP");
-    if(std::regex_search(this->_instruction_operator, matches, JMP_regex)){
-      
-      this->_JMP_operands.insert(pair<int, std::string>(this->JMP_occurrence_number, this->_instruction_operand_1));
-      this->_JMP_code_line.insert(this->_JMP_code_line.end(), this->_current_line_string);
-      this->_JMP_line_number.insert(this->_JMP_line_number.end(), this->_current_line_number);
-      this->JMP_occurrence_number++;
-    }
+    StoreLabelOperandOccurrence(this->_instruction_operand_1);
 
     // Indicates the line's command kind
     this->_line_type_identifier = REGULAR_TYPE;
@@ -469,6 +466,9 @@ void Assembler::Parser(std::string code_line ){
     std::cout<< this->_operand_1_offset << endl;
     std::cout<< this->_operand_2_offset << endl;
     */
+
+    StoreLabelOperandOccurrence(this->_instruction_operand_1);
+    StoreLabelOperandOccurrence(this->_instruction_operand_2);
 
     // Indicates the line's command kind
     this->_line_type_identifier = COPY_TYPE;
@@ -589,12 +589,12 @@ void Assembler::Parser(std::string code_line ){
 
     // Check CONST 0
     if(std::stoi(this->_instruction_operand_2) == 0){
-      map<int, std::string>::iterator itr;
+      vector<label_occurrence>::iterator itr;
       // Cycles through the vector of labels used by the DIV instruction
-      for(itr = this->_DIV_operands.begin(); itr!=this->_DIV_operands.end(); itr++){
+      for(itr = this->_DIV_label_occurrences.begin(); itr!=this->_DIV_label_occurrences.end(); itr++){
         // Notifies an error if the DIV statement uses the LABEL assigned to CONST 0
-        if(itr->second == this->_current_label){
-          error div_zero_error(this->_DIV_code_line[itr->first], this->_DIV_line_number[itr->first],error::error_07);
+        if(itr->get_label() == this->_current_label){
+          error div_zero_error(itr->get_code_line(), itr->get_line_number(),error::error_07);
           this->_assembling_errors->include_error(div_zero_error);
           // Replaces the operand of CONST for 1
           this->_instruction_operand_2 = "1";
@@ -616,6 +616,28 @@ void Assembler::Parser(std::string code_line ){
                       //////////////////////////////////////////////
                       //**   ERROR verify --------------------------
                       //////////////////////////////////////////////
+
+}
+
+void Assembler::StoreLabelOperandOccurrence(std::string label_operand){
+  std::smatch matches;
+  std::regex JMP_regex("\\bJMP");
+
+  // Stores information about the occurrence of the 
+  // DIV instruction to report division by zero errors
+  if(this->_instruction_operator == "DIV"){
+    label_occurrence occurrence(label_operand, this->_current_line_string, this->_current_line_number);
+    this->_DIV_label_occurrences.insert(this->_DIV_label_occurrences.end(), occurrence);
+  }
+  // Stores information about the occurrence of the 
+  // JMP instruction to report JMP errors
+  else if(std::regex_search(this->_instruction_operator, matches, JMP_regex)){
+    label_occurrence occurrence(label_operand, this->_current_line_string, this->_current_line_number);
+    this->_JMP_label_occurrences.insert(this->_JMP_label_occurrences.end(), occurrence);
+  }
+  // Stores operand label information for possible error notifications
+  label_occurrence occurrence(label_operand, this->_current_line_string, this->_current_line_number);
+  this->_label_occurrences.insert(this->_label_occurrences.end(), occurrence);
 
 }
 
@@ -977,13 +999,13 @@ void Assembler::ResolveLabelValue(std::string label){
     //////////////////////////////////////////////      
 
   // Check JMP for SECTION DATA
-  if(label_value > this->_object_file.size()){
-    map<int, std::string>::iterator itr;
+  if(label_value >= this->_object_file.size()){
+    vector<label_occurrence>::iterator itr;
     // Cycles through the vector of labels used by the JMP instructions
-    for(itr = this->_JMP_operands.begin(); itr!=this->_JMP_operands.end(); itr++){
+    for(itr = this->_JMP_label_occurrences.begin(); itr!=this->_JMP_label_occurrences.end(); itr++){
       // Notifies an error if JMP goes to SECTION DATA
-      if(itr->second == label){
-        error JMP_wrong_section_error(this->_JMP_code_line[itr->first], this->_JMP_line_number[itr->first],error::error_03);
+      if(itr->get_label() == label){
+        error JMP_wrong_section_error(itr->get_code_line(), itr->get_line_number(),error::error_03);
         this->_assembling_errors->include_error(JMP_wrong_section_error);
       }
     }
