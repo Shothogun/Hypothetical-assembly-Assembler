@@ -118,7 +118,9 @@ class Assembler{
       *
       * Identify and validate tokens 
       */
-    bool Scanner(); 
+    void Scanner(); 
+
+    void Parser(std::string code_line);
 
     //! IdentifyCommandType();
     /*
@@ -175,7 +177,13 @@ class Assembler{
     */
     std::vector<std::string> _object_file;
 
+    //! _section_data_preprocessed
+    /*!
+     *
+     * 
+    */
 
+    std::vector<std::string> _section_data_preprocessed;
     //! _section_data_commands
     /*! 
      *  Stores the preprocessed code's section data
@@ -211,6 +219,16 @@ class Assembler{
      *  First value: offset
      *  Second value: line occurred it
     */
+
+   std::map<std::string, int> _JMP_operands;
+   std::vector<std::string> _JMP_code_line;
+   std::vector<int>  _JMP_line_number;
+
+    // Indicates the occurrence number of the DIV instruction
+    int DIV_occurrence_number = 0;
+
+    // Indicates the occurrence number of the JMP instructions
+    int JMP_occurrence_number = 0;
    
     static const  int   OFFSET = 0;
     static const  int   LINE   = 1;
