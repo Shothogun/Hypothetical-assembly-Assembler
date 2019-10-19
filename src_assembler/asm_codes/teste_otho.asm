@@ -6,7 +6,6 @@
 
   
 		
-
 SECTION TEXT
 		INPUT		B   ; isso aqui é um triangulo
 	; isso aqui é um triangulo
@@ -37,7 +36,10 @@ SECTION TEXT
 
 		
 SECTION DATA
+qwewqewqewq 2
 	b:		sPace
 	H:		SPACE 		2
+COPY B, DOIS
+T: ALLOC 			2
 	R:		SPACE
 	dois:	CONST		2

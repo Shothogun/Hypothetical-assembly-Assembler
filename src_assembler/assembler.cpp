@@ -611,6 +611,16 @@ void Assembler::Parser(std::string code_line ){
     }
 
   } // if is_a_CONST_directive
+
+
+  // Code's line is at SECTION TEXT and 
+  // has no valid instruction
+  if((is_a_SPACE_directive == false && 
+     is_a_CONST_directive == false)
+     && this->_section_identifier == DATA)
+  {     
+    this->Error4Verify(code_line);
+  }
 }
 
 void Assembler::IdentifyCommandType(){
@@ -1099,6 +1109,28 @@ int Assembler::AllocSizeManager(int label_reference){
   else{
     alloc_size_number = 1;
     return alloc_size_number;
+  }
+}
+
+void Assembler::Error4Verify(std::string code_line) {
+  std::smatch matches;
+  std::regex DIRECTIVE_regex("(SECTION|SPACE|CONST|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT|COPY|STOP)(.*)");
+
+  // Check if begins with a valid instruction
+  bool directive_exist = std::regex_search (code_line,
+                                            matches,DIRECTIVE_regex);
+
+
+  //////////////////////////////////////////////
+  //**   ERROR CASE ----------------------------
+  //////////////////////////////////////////////   
+
+  if(!directive_exist){
+    error invalid_instruction(code_line,
+                          this->_current_line_number,
+                          error::error_04);
+
+    _assembling_errors->include_error(invalid_instruction);
   }
 }
 
