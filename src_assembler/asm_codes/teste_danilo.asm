@@ -5,7 +5,7 @@
 		
 SECTION DATA
 	b:		sPace
-	H:		SPACE 		2
+	b:		SPACE 		2
 	R:		SPACE
 	ZERO:	CONST		0
 
@@ -17,8 +17,8 @@ SECTION TEXT
 	; isso aqui é um triangulo
 		INPUT		b
 		JMP		H
-		JMPZ		Bisc
-		JMPP		B
+	A:	JMPZ		Bisc
+	A:	JMPP		B
 		JMPN		H
 		LOAD		B
 		load		B

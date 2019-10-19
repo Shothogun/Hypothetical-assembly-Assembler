@@ -933,9 +933,15 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       }
       break;
     case LABEL_DEFINITION:
+      //////////////////////////////////////////////
+      //**   ERROR CASE ----------------------------
+      //////////////////////////////////////////////  
+
       // Verifies if it's defined
+      // If already defined, notifies an error
       if(this->_symbol_table->get_definition(label)){
-        // ERROR case
+        error repeated_label_error(this->_current_line_string, this->_current_line_number, error::error_01);
+        this->_assembling_errors->include_error(repeated_label_error);
       }
 
       else {
