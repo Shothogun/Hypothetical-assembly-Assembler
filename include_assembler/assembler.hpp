@@ -44,6 +44,9 @@ class Assembler{
      */
     void MakeObjectFile(char* source_code_name);
 
+    //! Error log
+    error_log* _assembling_errors;
+
   private:
     //! SECTION constants identifiers
     static const int NONE = 0;
@@ -83,6 +86,13 @@ class Assembler{
     */
     bool _exists = false;
 
+    //! _SECTION_TEXT_exist
+    /*!
+     *
+     * Indicates if a text section was found 
+    */ 
+    bool _SECTION_TEXT_exist = false;
+
     //! GenerateObjCode(std::string instruction);
     /*! 
      *  Produces a STOP object code instruction
@@ -103,6 +113,20 @@ class Assembler{
      */
     void GenerateObjCode(std::string instruction, std::string operand1,
                          std::string operand2);
+    //! Scanner(std::string source_code_line, int line_number)
+    /*! 
+      *
+      * Identify and validate tokens 
+    */
+    void Scanner(); 
+    
+    //! Parser(std::string code_line)
+    /*! 
+      *
+      * Identify and validate operators and 
+      * operands according to language syntax
+    */
+    void Parser(std::string code_line);
 
     //! IdentifyCommandType();
     /*
@@ -132,7 +156,25 @@ class Assembler{
      *  Once a label value mentioned earlier is defined,
      *  its values is substituted by the new defined one
      */
-    int ResolveLabelValue(std::string label);
+    void ResolveLabelValue(std::string label);
+
+    //! AllocSizeManager()
+    /*
+     *  Indicates how many spaces are stored
+     *  to the label defined. A regular ocupies 1.
+     *  At SPACES directives, allocates N given.
+     *  Argument label_reference: indicates
+     *  which object code address occurs the reference.
+     *  Returns the SPACE size allocated.
+     */
+    int AllocSizeManager(int label_reference);
+
+    //! Error15Verify()
+    /*! 
+     *  A method that verifies error 15 type at 
+     *  label value resolving process.
+    */
+    void Error15Verify(int label_reference);
 
 
     //! _pre_file
@@ -148,7 +190,12 @@ class Assembler{
     */
     std::vector<std::string> _object_file;
 
-
+    //! _section_data_preprocessed
+    /*!
+     * Stores code from date section for later evaluation
+     * 
+    */
+    std::vector<std::string> _section_data_preprocessed;
     //! _section_data_commands
     /*! 
      *  Stores the preprocessed code's section data
@@ -157,17 +204,89 @@ class Assembler{
     */
     std::vector<std::string> _section_data_commands;
 
+    //! _DIV_operands;
+    /*!
+     *  Store labels of rows containing a DIV instruction
+     * 
+    */
+    std::map<int, std::string> _DIV_operands;
+    
+    //! _DIV_code_line;
+    /*!
+     *  Stores the code's line containing a DIV instruction 
+     * 
+    */
+    std::vector<std::string> _DIV_code_line;
+    
+    //! _DIV_line_number;
+    /*!
+     *  Stores the number of rows containing a DIV instruction 
+     * 
+    */
+    std::vector<int>  _DIV_line_number;
+
+    //! _JMP_operands
+    /*!
+     * Store labels of rows containing a DIV instruction
+     *
+    */
+   std::map<int, std::string> _JMP_operands;
+
+    //! _JMP_code_line
+    /*!
+     * Stores the code's line containing a DIV instruction 
+     *
+    */
+   std::vector<std::string> _JMP_code_line;
+
+    //! _JMP_line_number
+    /*!
+     * Stores the number of rows containing a DIV instruction 
+     *
+    */
+   std::vector<int>  _JMP_line_number;
+
+    //!
+    /*!
+     * Indicates the occurrence number of the DIV instruction
+     *
+    */
+    int DIV_occurrence_number = 0;
+
+    //! 
+    /*! 
+     * Indicates the occurrence number of the JMP instructions
+     *
+    */
+    int JMP_occurrence_number = 0;
+   
+    static const  int   OFFSET = 0;
+    static const  int   LINE   = 1;
+
     //! _address_offset
     /*! 
-     *  Stores all address offset 
+     *  Stores all address offset.
+     *  First value: offset
+     *  Second value: line occurred it
     */
-    map<int, int> _address_offset;
+    map<int, int[2]> _address_offset;
 
+    //! _current_line_string
+    /*! 
+     *  Stores preprocessed code's line to error report
+    */
+    std::string _current_line_string;
 
+    //! _current_label
+    /*!
+      * Store last label found 
+    */
+    std::string _current_label;
     //! _instruction_operator
     /*! 
      *  Stores the command operator from preprocessed line instruction
     */
+
     std::string _instruction_operator;
 
     //! _instruction_operand_1
@@ -216,7 +335,7 @@ class Assembler{
     /*!
     *   Stores the current line from the preprocessed code
     */
-    int _current_line = 0;
+    int _current_line_number = 0;
 
 };
 

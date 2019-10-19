@@ -11,6 +11,7 @@ Assembler::Assembler(char* preprocessed_code_name){
   // Tables initialization
   this->_instruction_table = new instruction_table();
   this->_symbol_table = new symbol_table();
+  this->_assembling_errors = new error_log();
 
   // Gets the original file name and swap with .pre extention
   std::regex name_regex("(.*)(.asm)");  
@@ -65,6 +66,7 @@ Assembler::Assembler(char* preprocessed_code_name){
 Assembler::~Assembler(){
   delete this->_instruction_table;
   delete this->_symbol_table;
+  delete this->_assembling_errors;
 }
 
 ///////////////////////////////////
@@ -78,6 +80,7 @@ void Assembler::Assembling(){
   // SECTION DATA code's line iterated
   std::vector<std::string>::iterator section_data_values;
 
+
   // Boolean value that express SECTION TEXT
   // detection at the code line
   bool is_a_SECTION_TEXT = false;
@@ -86,35 +89,8 @@ void Assembler::Assembling(){
   // detection at the code line
   bool is_a_SECTION_DATA = false;
 
-  // Indicates that the instruction follows a correct
-  // pattern
-  bool is_a_regular_instruction = false;
-
-  // Indicates that is a Copy instruction
-  bool is_a_COPY_instruction = false;
-
-  // Indicates that is a STOP instruction
-  bool is_a_STOP_instruction = false;
-
-  // Indicates that is a SPACE directive
-  bool is_a_SPACE_directive = false;
-
-  // Indicates that is a CONST directive
-  bool is_a_CONST_directive = false;
-
-  // Indicates that is a label definition
-  bool label_definition = false;
-
   // Array composed by the matches found in the regex search
   std::smatch matches;
-
-  // String representing the label being stored
-  // in the SPACE directive
-  std::string SPACE_label;
-
-  // String representing the constant being 
-  // stored in the label in the CONST directive
-  std::string CONST_label;
 
   //////////////////////////////////
   //**   Read instructions ---------
@@ -122,39 +98,7 @@ void Assembler::Assembling(){
   for(preprocessed_code_line = this->_pre_file.begin();
       preprocessed_code_line < this->_pre_file.end();
       preprocessed_code_line++) {    
-                        //////////////////////////////////////////////
-                        //**   Identify Label at beginning
-                        //////////////////////////////////////////////
-
-    // Identifies, eliminates from the code
-    // and stores its value into the symbol table
-    std::regex label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(.*)");
-    label_definition = std::regex_search (*preprocessed_code_line,
-                        matches,label_regex);
-
-    this->_instruction_operand_1 = matches[1].str() + matches[2].str();
-
-
-    if(label_definition) {
-      *preprocessed_code_line = std::regex_replace (*preprocessed_code_line,label_regex,"$5");
-      LabelIdentifier(this->_instruction_operand_1, LABEL_DEFINITION);
-      /* Debug
-      std::cout << this->_instruction_operand_1 << std::endl;
-      */      
-    }
-
-                            
-                        //////////////////////////////////////////////
-                        //**   Separate elements from line
-                        //////////////////////////////////////////////
-
-    is_a_regular_instruction = false;
-    is_a_COPY_instruction = false;
-    is_a_STOP_instruction = false;
-
-    // Steps one line from preprocessed code
-    this->_current_line++;
-        
+    
     //////////////////////////////////
     //**   SECTION TEXT identifier ---
     ////////////////////////////////// 
@@ -167,13 +111,15 @@ void Assembler::Assembling(){
 
     // Seek the directive match
     is_a_SECTION_TEXT = std::regex_search (*preprocessed_code_line,
-                                           matches,TEXT_SECTION_regex);
+                                            matches,TEXT_SECTION_regex);
 
     if(is_a_SECTION_TEXT){
       this->_section_identifier = TEXT;
 
       // Resets its value, since it's SECTION TEXT
       is_a_SECTION_DATA = false;
+
+      this->_SECTION_TEXT_exist = true;
 
       // Indicates the line's command kind
       this->_line_type_identifier = SECTION_TYPE;
@@ -191,7 +137,7 @@ void Assembler::Assembling(){
 
     // Seek the directive match
     is_a_SECTION_DATA = std::regex_search (*preprocessed_code_line,
-                                           matches,DATA_SECTION_regex);
+                                            matches,DATA_SECTION_regex);
 
     if(is_a_SECTION_DATA){
       this->_section_identifier = DATA;
@@ -203,176 +149,62 @@ void Assembler::Assembling(){
       this->_line_type_identifier = SECTION_TYPE;
     }
 
-    //////////////////////////////////////////////
-    //**   Identify regular instruction ---------
-    //////////////////////////////////////////////
-    
-    std::regex INSTRUCTION_regex("(\\w+)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
-
-    // Seek the instruction match
-    is_a_regular_instruction = std::regex_search (*preprocessed_code_line,
-                                              matches,INSTRUCTION_regex);  
-
-    // It must ignore COPY instruction and SECTION directive
-    if(is_a_regular_instruction && 
-      matches[1].str().compare("COPY") != 0 &&
-      matches[1].str().compare("SECTION") != 0){
-      // Matches pattern at instruction:
-      // 0: Instruction match
-      // 1: Operator
-      // 2: space character
-      // 3: Head character from the label
-      // 4: Tail from the label
-      // 5: Plus character
-      // 6: A digit
-
-      this->_instruction_operator = matches[1].str();
-      this->_instruction_operand_1 = matches[3].str() + matches[4].str();
-      this->_operand_1_offset = matches[6].str();
-
-      // Indicates the line's command kind
-      this->_line_type_identifier = REGULAR_TYPE;
+    if(this->_section_identifier == DATA){
+      this->_section_data_preprocessed.insert(_section_data_preprocessed.end(),*preprocessed_code_line);
+      continue;
     }
 
-    //////////////////////////////////////////////
-    //**   Identify COPY instruction -------------
-    //////////////////////////////////////////////
-    std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
-
-    // Seek the instruction match
-    is_a_COPY_instruction = std::regex_search (*preprocessed_code_line,
-                                              matches,COPY_instruction_regex);
-
-    if(is_a_COPY_instruction){
-      // Matches pattern at instruction COPY:
-      // 0: Instruction COPY match
-      // 1: COPY
-      // 2: space character
-      // 3: Head character from the label
-      // 4: Tail from the label
-      // 5: Plus character
-      // 6: A digit
-      // 7: comma character
-      // 8: Head character from the label
-      // 9: Tail from the label
-      // 10: Plus character
-      // 11: A digit
-
-
-      this->_instruction_operator = matches[1].str();
-      this->_instruction_operand_1 = matches[3].str()+ matches[4].str();
-      this->_instruction_operand_2 = matches[8].str()+ matches[9].str();
-      this->_operand_1_offset = matches[6].str();
-      this->_operand_2_offset = matches[11].str();
-
-      /* Debug
-      std::cout<< this->_instruction_operand_1 << endl;
-      std::cout<< this->_instruction_operand_2 << endl;
-      std::cout<< this->_operand_1_offset << endl;
-      std::cout<< this->_operand_2_offset << endl;
-      */
-
-      // Indicates the line's command kind
-      this->_line_type_identifier = COPY_TYPE;
-    }                                              
-
-    //////////////////////////////////////////////
-    //**   Identify STOP -------------------------
-    //////////////////////////////////////////////
-    
-    std::regex STOP_instruction_regex("(STOP)");
-
-    // Seek the instruction match
-    is_a_STOP_instruction = std::regex_search (*preprocessed_code_line,
-                                              matches,STOP_instruction_regex);
-
-    if(is_a_STOP_instruction){
-      // Matches pattern at instruction STOP:
-      // 0: Instruction STOP match
-
-      this->_instruction_operator = matches[0].str();
-
-      // Indicates the line's command kind
-      this->_line_type_identifier = STOP_TYPE;
-    }  
-
-    //////////////////////////////////////////////
-    //**   Identify SPACE directive --------------
-    //////////////////////////////////////////////
-    
-    std::regex SPACE_directive_regex("(SPACE)(\\s*)(\\d*)");
-
-    // Seek the instruction match
-    is_a_SPACE_directive = std::regex_search (*preprocessed_code_line,
-                                              matches,SPACE_directive_regex);
-
-    if(is_a_SPACE_directive){
-      // Matches pattern at directive SPACE:
-      // 0: Directive SPACE match
-      // 1: SPACE
-      // 2: space character
-      // 3: A digit
-
-      this->_instruction_operator = matches[1].str();
-      this->_instruction_operand_2 = matches[3].str();
-
-      // Indicates the line's command kind
-      this->_line_type_identifier = SPACE_TYPE;
-
-      /* Debug
-      std::cout<< "Directive: " << this->_instruction_operator << std::endl;
-      std::cout<< "Number   : " << this->_instruction_operand_2 << std::endl;
-      */
-    }  
-
-    //////////////////////////////////////////////
-    //**   Identify CONST directive --------------
-    //////////////////////////////////////////////
-
-    std::regex CONST_directive_regex("(CONST)(\\s)(\\d+)");
-
-    // Seek the instruction match
-    is_a_CONST_directive = std::regex_search (*preprocessed_code_line,
-                                              matches,CONST_directive_regex);
-
-    if(is_a_CONST_directive){
-      // Matches pattern at directive SPACE:
-      // 0: Directive CONST match
-      // 1: CONST 
-      // 2: Space character
-      // 3: A number
-
-      this->_instruction_operator = matches[1].str();
-      this->_instruction_operand_2 = matches[3].str();
-
-      // Indicates the line's command kind
-      this->_line_type_identifier = CONST_TYPE;
-
-      /* Debug
-      std::cout<< "Directive: " << this->_instruction_operator << std::endl;
-      std::cout<< "Number  : " << this->_instruction_operand_2 << std::endl;
-      */
-    }
-                        //////////////////////////////////////////////
-                        //**   ERROR verify --------------------------
-                        //////////////////////////////////////////////
+    Parser(*preprocessed_code_line);
 
                         //////////////////////////////////////////////
                         //**   Produce the machine code --------------
                         //////////////////////////////////////////////
     
-  IdentifyCommandType();
+    IdentifyCommandType();
 
-  /* Debug
-  std::cout << *preprocessed_code_line;
-  */ 
+    /* Debug
+    std::cout << preprocessed_code_line;
+    */ 
 
-  /*Debug
-  this->_symbol_table->PrintTable();
-  */
+    /*Debug
+    this->_symbol_table->PrintTable();
+    */
 
   } // for 
 
+  std::vector<std::string>::iterator section_data_lines;
+
+  for(section_data_lines = this->_section_data_preprocessed.begin();
+    section_data_lines < this->_section_data_preprocessed.end();
+    section_data_lines++) {
+      
+    this->_section_identifier = DATA;
+
+    // Resets its value, since it's SECTION DATA
+    is_a_SECTION_TEXT = false;
+
+    // Indicates the line's command kind
+    this->_line_type_identifier = SECTION_TYPE;
+
+    Parser(*section_data_lines);
+
+                        //////////////////////////////////////////////
+                        //**   Produce the machine code --------------
+                        //////////////////////////////////////////////
+    
+    IdentifyCommandType();
+  
+  }
+
+        //////////////////////////////////////////////
+        //**   ERROR CASE ----------------------------
+        //////////////////////////////////////////////   
+
+  // Notifies an error if SECTION TEXT was not found
+  if(!this->_SECTION_TEXT_exist){
+    error missing_TEXT_error("", 0, error::error_12);
+    this->_assembling_errors->include_error(missing_TEXT_error);
+  }
                         //////////////////////////////////////////////
                         //**   Append SECTION DATA in object file-----
                         //////////////////////////////////////////////
@@ -405,6 +237,368 @@ void Assembler::Assembling(){
     i++;
   }
   */
+}
+
+void Assembler::Scanner(){
+  
+    const int MAX_SIZE_TOKEN = 50;
+    std::smatch matches;
+    std::regex valid_token("(^\\d+$)|(^([a-z]|[A-Z]|_)(\\w+|\\d+)*$)");
+    // Characters that separate tokens
+    std::regex taps("\\s+|,|:|\\+");
+    regex_token_iterator<string::iterator> itr(this->_current_line_string.begin(), this->_current_line_string.end(), taps, -1);
+    regex_token_iterator<string::iterator> end;
+    string token;
+    // Cycles through all tokens identified on the line.
+    while (itr != end){
+      token = *itr;
+      if(token != ""){
+
+        //////////////////////////////////////////////
+        //**   ERROR CASE ----------------------------
+        //////////////////////////////////////////////      
+
+        // Checks if it is a valid token
+        // If not, notify an error
+        if(!std::regex_match(token, matches, valid_token) || (token.length() > MAX_SIZE_TOKEN)){
+          error error(this->_current_line_string, this->_current_line_number, error::error_10);
+          _assembling_errors->include_error(error);
+          return;
+        }
+      }
+      itr++;
+    }
+    return;
+}
+
+void Assembler::Parser(std::string code_line ){
+
+  // Indicates that the instruction follows a correct
+  // pattern
+  bool is_a_regular_instruction = false;
+
+  // Indicates that is a Copy instruction
+  bool is_a_COPY_instruction = false;
+
+  // Indicates that is a STOP instruction
+  bool is_a_STOP_instruction = false;
+
+  // Indicates that is a SPACE directive
+  bool is_a_SPACE_directive = false;
+
+  // Indicates that is a CONST directive
+  bool is_a_CONST_directive = false;
+
+  // Indicates that is a label definition
+  bool label_definition = false;
+
+  // Array composed by the matches found in the regex search
+  std::smatch matches;
+
+  // String representing the label being stored
+  // in the SPACE directive
+  std::string SPACE_label;
+
+  // String representing the constant being 
+  // stored in the label in the CONST directive
+  std::string CONST_label;
+      // Steps one line from preprocessed code
+    this->_current_line_number++;
+
+    // Stores the current line processed
+    this->_current_line_string = code_line;
+
+                      //////////////////////////////////////////////
+                      //**   Identify and Validate Tokens
+                      //////////////////////////////////////////////
+
+    Scanner();
+
+                      //////////////////////////////////////////////
+                      //**   Identify Label at beginning
+                      //////////////////////////////////////////////
+
+  // Identifies, eliminates from the code
+  // and stores its value into the symbol table
+  std::regex label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(.*)");
+  label_definition = std::regex_search (code_line,
+                      matches,label_regex);
+
+  /*
+  // Label
+  this->_instruction_operand_1 = matches[1].str() + matches[2].str();
+
+  // Operation
+  this->_instruction_operand_2 = matches[5].str();
+  */
+  // Label 
+  this->_current_label = matches[1].str() + matches[2].str();
+
+  if(label_definition) {
+    code_line = std::regex_replace (code_line,label_regex,"$5");
+    LabelIdentifier(this->_current_label, LABEL_DEFINITION);
+    /* Debug
+    std::cout << this->_instruction_operand_1 << std::endl;
+    */      
+  }
+
+                          
+                      //////////////////////////////////////////////
+                      //**   Separate elements from line
+                      //////////////////////////////////////////////
+
+  is_a_regular_instruction = false;
+  is_a_COPY_instruction = false;
+  is_a_STOP_instruction = false;
+
+
+  //////////////////////////////////////////////
+  //**   Identify regular instruction ---------
+  //////////////////////////////////////////////
+  
+  std::regex INSTRUCTION_regex("(\\w+)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+
+  // Seek the instruction match
+  is_a_regular_instruction = std::regex_search (code_line,
+                                            matches,INSTRUCTION_regex);  
+
+  // It must ignore COPY instruction and SECTION directive
+  if(is_a_regular_instruction && 
+    matches[1].str().compare("COPY") != 0 &&
+    matches[1].str().compare("SECTION") != 0){
+    // Matches pattern at instruction:
+    // 0: Instruction match
+    // 1: Operator
+    // 2: space character
+    // 3: Head character from the label
+    // 4: Tail from the label
+    // 5: Plus character
+    // 6: A digit
+
+    this->_instruction_operator = matches[1].str();
+    this->_instruction_operand_1 = matches[3].str() + matches[4].str();
+    this->_operand_1_offset = matches[6].str();
+
+    // Stores information about the occurrence of the 
+    // DIV instruction to report division by zero errors
+    if(this->_instruction_operator == "DIV"){
+      
+      this->_DIV_operands.insert(pair<int, std::string>(this->DIV_occurrence_number, this->_instruction_operand_1));
+      this->_DIV_code_line.insert(this->_DIV_code_line.end(), this->_current_line_string);
+      this->_DIV_line_number.insert(this->_DIV_line_number.end(), this->_current_line_number);
+      this->DIV_occurrence_number++;
+    }
+
+    // Stores information about the occurrence of the 
+    // JMP instruction to report division by zero errors
+    std::regex JMP_regex("\\bJMP");
+    if(std::regex_search(this->_instruction_operator, matches, JMP_regex)){
+      
+      this->_JMP_operands.insert(pair<int, std::string>(this->JMP_occurrence_number, this->_instruction_operand_1));
+      this->_JMP_code_line.insert(this->_JMP_code_line.end(), this->_current_line_string);
+      this->_JMP_line_number.insert(this->_JMP_line_number.end(), this->_current_line_number);
+      this->JMP_occurrence_number++;
+    }
+
+    // Indicates the line's command kind
+    this->_line_type_identifier = REGULAR_TYPE;
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////        
+
+    // Check if it's in the correct section
+    if(this->_section_identifier != TEXT){
+      error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+      this->_assembling_errors->include_error(wrong_section_error);
+    }
+  }
+
+  //////////////////////////////////////////////
+  //**   Identify COPY instruction -------------
+  //////////////////////////////////////////////
+  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+
+  // Seek the instruction match
+  is_a_COPY_instruction = std::regex_search (code_line,
+                                            matches,COPY_instruction_regex);
+
+  if(is_a_COPY_instruction){
+    // Matches pattern at instruction COPY:
+    // 0: Instruction COPY match
+    // 1: COPY
+    // 2: space character
+    // 3: Head character from the label
+    // 4: Tail from the label
+    // 5: Plus character
+    // 6: A digit
+    // 7: comma character
+    // 8: Head character from the label
+    // 9: Tail from the label
+    // 10: Plus character
+    // 11: A digit
+
+
+    this->_instruction_operator = matches[1].str();
+    this->_instruction_operand_1 = matches[3].str()+ matches[4].str();
+    this->_instruction_operand_2 = matches[8].str()+ matches[9].str();
+    this->_operand_1_offset = matches[6].str();
+    this->_operand_2_offset = matches[11].str();
+
+    /* Debug
+    std::cout<< this->_instruction_operand_1 << endl;
+    std::cout<< this->_instruction_operand_2 << endl;
+    std::cout<< this->_operand_1_offset << endl;
+    std::cout<< this->_operand_2_offset << endl;
+    */
+
+    // Indicates the line's command kind
+    this->_line_type_identifier = COPY_TYPE;
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////        
+
+    // Check if it's in the correct section
+    if(this->_section_identifier != TEXT){
+      error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+      this->_assembling_errors->include_error(wrong_section_error);
+    }
+
+  }          
+
+  //////////////////////////////////////////////
+  //**   Identify STOP -------------------------
+  //////////////////////////////////////////////
+  
+  std::regex STOP_instruction_regex("(STOP)");
+
+  // Seek the instruction match
+  is_a_STOP_instruction = std::regex_search (code_line,
+                                            matches,STOP_instruction_regex);
+
+  if(is_a_STOP_instruction){
+    // Matches pattern at instruction STOP:
+    // 0: Instruction STOP match
+
+    this->_instruction_operator = matches[0].str();
+
+    // Indicates the line's command kind
+    this->_line_type_identifier = STOP_TYPE;
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////        
+
+    // Check if it's in the correct section
+    if(this->_section_identifier != TEXT){
+      error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+      this->_assembling_errors->include_error(wrong_section_error);
+    }
+
+  }  
+
+  //////////////////////////////////////////////
+  //**   Identify SPACE directive --------------
+  //////////////////////////////////////////////
+  
+  std::regex SPACE_directive_regex("(SPACE)(\\s*)(\\d*)");
+
+  // Seek the instruction match
+  is_a_SPACE_directive = std::regex_search (code_line,
+                                            matches,SPACE_directive_regex);
+
+  if(is_a_SPACE_directive){
+    // Matches pattern at directive SPACE:
+    // 0: Directive SPACE match
+    // 1: SPACE
+    // 2: space character
+    // 3: A digit
+
+    this->_instruction_operator = matches[1].str();
+    this->_instruction_operand_2 = matches[3].str();
+
+    // Indicates the line's command kind
+    this->_line_type_identifier = SPACE_TYPE;
+
+    /* Debug
+    std::cout<< "Directive: " << this->_instruction_operator << std::endl;
+    std::cout<< "Number   : " << this->_instruction_operand_2 << std::endl;
+    */
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////    
+    
+    // Check if it's in the correct section
+    if(this->_section_identifier != DATA){
+      error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+      this->_assembling_errors->include_error(wrong_section_error);
+    }
+  }  
+
+  //////////////////////////////////////////////
+  //**   Identify CONST directive --------------
+  //////////////////////////////////////////////
+
+  std::regex CONST_directive_regex("(CONST)(\\s)(\\d+)");
+
+  // Seek the instruction match
+  is_a_CONST_directive = std::regex_search (code_line,
+                                            matches,CONST_directive_regex);
+
+  if(is_a_CONST_directive){
+    // Matches pattern at directive SPACE:
+    // 0: Directive CONST match
+    // 1: CONST 
+    // 2: Space character
+    // 3: A number
+
+    this->_instruction_operator = matches[1].str();
+    this->_instruction_operand_2 = matches[3].str();
+
+    // Indicates the line's command kind
+    this->_line_type_identifier = CONST_TYPE;
+
+    /* Debug
+    std::cout<< "Directive: " << this->_instruction_operator << std::endl;
+    std::cout<< "Number  : " << this->_instruction_operand_2 << std::endl;
+    */
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////    
+
+    // Check CONST 0
+    if(std::stoi(this->_instruction_operand_2) == 0){
+      map<int, std::string>::iterator itr;
+      // Cycles through the vector of labels used by the DIV instruction
+      for(itr = this->_DIV_operands.begin(); itr!=this->_DIV_operands.end(); itr++){
+        // Notifies an error if the DIV statement uses the LABEL assigned to CONST 0
+        if(itr->second == this->_current_label){
+          error div_zero_error(this->_DIV_code_line[itr->first], this->_DIV_line_number[itr->first],error::error_07);
+          this->_assembling_errors->include_error(div_zero_error);
+          // Replaces the operand of CONST for 1
+          this->_instruction_operand_2 = "1";
+        }
+      }
+    }
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////        
+
+    // Check if it's in the correct section
+    if(this->_section_identifier != DATA){
+      error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
+      this->_assembling_errors->include_error(wrong_section_error);
+    }
+
+  }
+                      //////////////////////////////////////////////
+                      //**   ERROR verify --------------------------
+                      //////////////////////////////////////////////
+
 }
 
 void Assembler::IdentifyCommandType(){
@@ -480,11 +674,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
     
       // Store labels offset 
       if(this->_operand_1_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       // Operand 1
@@ -498,11 +694,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
       // Store labels offset 
       if(this->_operand_2_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_2_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_2_offset); 
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number; 
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       // Operand 2
@@ -512,7 +710,7 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
                                 label_value); 
       this->_symbol_table->set_list_address(operand2, current_object_code_address);
 
-    }
+    } //if
 
     // Command located in DATA type and opcode not found, 
     // that means a directive
@@ -546,8 +744,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
       
       default:
         break;
-      }
-    }
+      } // switch
+    }// else if
 
     else {
 
@@ -586,11 +784,13 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
 
       // Store labels offset 
       if(this->_operand_1_offset.compare("") != 0) {
-        this->_address_offset[current_object_code_address] = stoi(this->_operand_1_offset);  
+        this->_address_offset[current_object_code_address][OFFSET] = stoi(this->_operand_1_offset);
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       else{
-        this->_address_offset[current_object_code_address] = 0;
+        this->_address_offset[current_object_code_address][OFFSET] = 0;
+        this->_address_offset[current_object_code_address][LINE] = this->_current_line_number;
       }
 
       label_value = to_string(LabelIdentifier(operand1, LABEL_OPERAND));
@@ -740,21 +940,53 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       break;
     default:
       break;
-    }
-  }
+    }// switch
+  }// else
+
+  return 0;
 }
 
-int Assembler::ResolveLabelValue(std::string label){
+
+void Assembler::ResolveLabelValue(std::string label){
   // Address at object code. At this function, it's
   // used for location of label at the object code.
   // Must be added to section data because codes are 
   // stored in differents vectors.
   int label_value = this->_object_file.size() + this->_section_data_commands.size();
 
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////      
+
+  // Check JMP for SECTION DATA
+  if(label_value > this->_object_file.size()){
+    map<int, std::string>::iterator itr;
+    // Cycles through the vector of labels used by the JMP instructions
+    for(itr = this->_JMP_operands.begin(); itr!=this->_JMP_operands.end(); itr++){
+      // Notifies an error if JMP goes to SECTION DATA
+      if(itr->second == label){
+        error JMP_wrong_section_error(this->_JMP_code_line[itr->first], this->_JMP_line_number[itr->first],error::error_03);
+        this->_assembling_errors->include_error(JMP_wrong_section_error);
+      }
+    }
+  }
+  
   // Access last reference to label at object code
   int label_reference = this->_symbol_table->get_list_address(label);
 
+  // Iteration to the next line which reference the label
+  // again.
   int next_label_reference;
+
+  // Indicates the address from the label plus the offset 
+  // from the operand
+  int access_address;
+
+  // Label's size at SPACE command
+  int alloc_size;
+
+  // Preprocessed line that occured the error
+  std::vector<std::string>::iterator error_line;
 
   // Reverses object file vector to cascading
   // value substitution process. Thus, 0 index must be
@@ -762,11 +994,40 @@ int Assembler::ResolveLabelValue(std::string label){
   std::reverse(this->_object_file.begin(),
                this->_object_file.end()); 
 
+  alloc_size = AllocSizeManager(label_reference);
+
   while(label_reference != -1) {
+
     next_label_reference = stoi(this->_object_file[label_reference]);
-    this->_object_file[label_reference] = to_string(label_value + this->_address_offset[label_reference]);
+
+    access_address = label_value + this->_address_offset[label_reference][OFFSET];
+
+    //////////////////////////////////////////////////////////////
+    //**   Label's storage memory access validation(SPACE range)
+    //////////////////////////////////////////////////////////////
+
+    // The offset surpass the alloc maximum, that is alloc-size-1.
+    // At offset 0, it's the base address
+    if(alloc_size - 1 < this->_address_offset[label_reference][OFFSET]){
+
+      error_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
+
+      // ERROR - Out-of-range label access
+      error out_range_error(*error_line,
+                            this->_address_offset[label_reference][LINE],
+                            error::error_16);
+
+      _assembling_errors->include_error(out_range_error);
+    /* Debug
+    cout<< alloc_size <<endl;
+    cout<<this->_address_offset[label_reference][OFFSET] <<endl;
+    */
+    } //if
+
+
+    this->_object_file[label_reference] = to_string(access_address);
     label_reference = next_label_reference;
-  }
+  } // while
 
   // Goes back to its standard pattern(inverted list)
   std::reverse(this->_object_file.begin(),
@@ -777,4 +1038,128 @@ int Assembler::ResolveLabelValue(std::string label){
 
   // Set as defined
   this->_symbol_table->set_definition(label, true);
+}
+
+
+int Assembler::AllocSizeManager(int label_reference){
+
+  // Express SPACE allocated at the directive
+  std::string alloc_size_string = this->_instruction_operand_2;
+
+  // How many bytes SPACE was stored
+  int alloc_size_number;
+
+  // Identifies correspond directive
+  std::smatch space_matches;
+  std::smatch const_matches;
+  
+  std::regex space_regex("(SPACE)(\\s)(\\d+)");
+  std::regex const_regex("(CONST)(\\s)(\\d+)");
+  bool space_command = std::regex_search (this->_current_line_string,
+                      space_matches,space_regex);
+  bool const_command = std::regex_search (this->_current_line_string,
+                      const_matches,const_regex);        
+
+  // Some important details from this directive identify
+  // process:
+  // * If there's no directive valid at this line
+  //   it will treat the command as SPACE by default(a regular
+  //   label declared at the line)
+  //   The invalid directive will be reported at the 
+  //   Assembling() function.
+
+
+  // Store labels alloc size at SPACE command
+  if(space_command){
+    if(alloc_size_string.compare("") != 0) {
+      alloc_size_number = stoi(space_matches[3].str());
+      return alloc_size_number;  
+    }
+
+    else{
+      alloc_size_number = 1;
+      return alloc_size_number;
+    } // else
+  } // if
+
+  // ERROR case - CONST modify operation
+  else if(const_command){
+
+    this->Error15Verify(label_reference);
+
+    alloc_size_number = 1;
+
+    return alloc_size_number;
+  }
+
+
+  // Common Label (just 1 alloc size)
+  else{
+    alloc_size_number = 1;
+    return alloc_size_number;
+  }
+}
+
+void Assembler::Error15Verify(int label_reference){
+
+    // Line where the refence occurs
+    std::vector<std::string>::iterator label_reference_line;
+    label_reference_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
+
+    // Identify the declared label
+    std::smatch label_match;
+    std::regex label_regex("([a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(CONST)(\\s)(\\d+)");
+    std::regex_search (this->_current_line_string,
+                        label_match,label_regex);
+
+    // Declared label as CONST
+    std::string label = label_match[1].str()+label_match[2].str();
+
+    // Analyse operation at CONST labels
+    std::smatch modify_const_match;
+    
+    std::regex copy_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+    std::regex store_regex("(STORE)(\\s)(\\w+)");
+    std::regex input_regex("(INPUT)(\\s)(\\w+)");
+
+    bool store_command = std::regex_search (*label_reference_line,
+                        modify_const_match,store_regex);
+
+    bool input_command = std::regex_search (*label_reference_line,
+                        modify_const_match,input_regex);
+
+    bool copy_command = std::regex_search (*label_reference_line,
+                    modify_const_match,copy_regex);
+
+    std::string destiny_operand = modify_const_match[3].str()+modify_const_match[4].str();
+
+    // Verifies if destiny operand is the CONST label
+    if(copy_command){
+
+      // It's the CONST label as operand
+      if(label.compare(destiny_operand) == 0){
+        copy_command = true;
+      }
+
+      // CONST label is operand. Don't modify
+      // it's value
+      else
+      {
+        copy_command = false;
+      }
+      
+    }                       
+          
+    if(copy_command || store_command || input_command == true) {
+      // Preprocessed line that occured the error
+      std::vector<std::string>::iterator error_line;
+      error_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
+
+      // ERROR - Out-of-range label access
+      error const_modify_error(*error_line,
+                            this->_address_offset[label_reference][LINE],
+                            error::error_15);
+
+      _assembling_errors->include_error(const_modify_error);
+    }
 }

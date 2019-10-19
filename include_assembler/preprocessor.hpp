@@ -49,6 +49,7 @@ class Preprocessor{
      *  the preprocessed file is not produced
     */
     bool _exists = false;
+    
     //! _preprocessing_errors 
     /*!
      * Store all errors from EQU and IF directives

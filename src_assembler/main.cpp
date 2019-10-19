@@ -27,6 +27,8 @@ int main(int argc,char* argv[]) {
 
   assembler->MakeObjectFile(source_code_file_name);
 
+  assembler->_assembling_errors->display(1);
+
   delete preprocessed_file;
   delete assembler;
 
