@@ -476,7 +476,7 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify STOP -------------------------
   //////////////////////////////////////////////
   
-  std::regex STOP_instruction_regex("(STOP)");
+  std::regex STOP_instruction_regex("(^STOP)(\\s*$)");
 
   // Seek the instruction match
   is_a_STOP_instruction = std::regex_search (code_line,
@@ -512,19 +512,30 @@ void Assembler::Parser(std::string code_line ){
      && this->_section_identifier == TEXT)
   {     
     this->Error5Verify(code_line);
+    this->Error8Verify(code_line);
   }
+
   
   //////////////////////////////////////////////
   //**   Identify SPACE directive --------------
   //////////////////////////////////////////////
   
-  std::regex SPACE_directive_regex("(SPACE)(\\s*)(\\d*)");
+  std::regex SPACE_directive_regex("(^SPACE)(\\s\\d*|\\s{0})(\\n$)");
 
   // Seek the instruction match
   is_a_SPACE_directive = std::regex_search (code_line,
-                                            matches,SPACE_directive_regex);
+                                            matches,SPACE_directive_regex);                                        
 
   if(is_a_SPACE_directive){
+
+    // If instruction is correct, third regex
+    // group is always a number
+    std::regex CORRECT_SPACE_directive_regex("(^SPACE)(\\s*)(\\d*)(\\n$)");
+
+    // Seek the instruction match
+    is_a_SPACE_directive = std::regex_search (code_line,
+                                              matches,CORRECT_SPACE_directive_regex);
+
     // Matches pattern at directive SPACE:
     // 0: Directive SPACE match
     // 1: SPACE
@@ -620,6 +631,7 @@ void Assembler::Parser(std::string code_line ){
      && this->_section_identifier == DATA)
   {     
     this->Error4Verify(code_line);
+    this->Error8Verify(code_line);
   }
 }
 
@@ -1114,18 +1126,14 @@ int Assembler::AllocSizeManager(int label_reference){
 
 void Assembler::Error4Verify(std::string code_line) {
   std::smatch matches;
-  std::regex DIRECTIVE_regex("(SECTION|SPACE|CONST|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT|COPY|STOP)(.*)");
+  std::regex DIRECTIVE_regex("(SECTION|SPACE|CONST|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT|COPY|STOP)(?!\\d|\\w)(.*)");
 
   // Check if begins with a valid instruction
-  bool directive_exist = std::regex_search (code_line,
+  bool instruction_exist = std::regex_search (code_line,
                                             matches,DIRECTIVE_regex);
 
 
-  //////////////////////////////////////////////
-  //**   ERROR CASE ----------------------------
-  //////////////////////////////////////////////   
-
-  if(!directive_exist){
+  if(!instruction_exist){
     error invalid_instruction(code_line,
                           this->_current_line_number,
                           error::error_04);
@@ -1136,7 +1144,9 @@ void Assembler::Error4Verify(std::string code_line) {
 
 void Assembler::Error5Verify(std::string code_line) {
   std::smatch matches;
-  std::regex INSTRUCTION_regex("(SECTION|SPACE|CONST|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT|COPY|STOP)(.*)");
+
+  // Invalid any other character that follows the instruction
+  std::regex INSTRUCTION_regex("(SECTION|SPACE|CONST|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT|COPY|STOP)(?!\\d|\\w)(.*)");
 
   // Check if begins with a valid instruction
   bool instruction_exist = std::regex_search (code_line,
@@ -1156,6 +1166,86 @@ void Assembler::Error5Verify(std::string code_line) {
   }
 }
 
+void Assembler::Error8Verify(std::string code_line) {
+  // Express if instruction is with a correct
+  // correspond operands amount 
+  bool correct_operands_amount = true;
+  std::smatch matches;
+  std::regex INSTRUCTION_regex("(SPACE|CONST|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT|COPY|STOP)(?!\\d|\\w)(.*)");
+
+  // Check if begins with a valid instruction
+  bool instruction_exist = std::regex_search (code_line,
+                                              matches,INSTRUCTION_regex);
+  
+  // Only analyse valid instruction
+  if(instruction_exist) {
+
+    std::string operand = matches[2].str() + matches[3].str();
+    std::smatch test_match;
+
+    // Don't notify directives at SECTION TEXT
+    if(matches[1].compare("COPY") == 0 && 
+      this->_section_identifier == TEXT){
+      // Verifies if it's a 2 operands operation
+      std::regex copy_operand_regex("(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+      correct_operands_amount = std::regex_search (operand,
+                                                test_match,copy_operand_regex);      
+    }
+
+    else if(matches[1].compare("STOP") == 0 && 
+            this->_section_identifier == TEXT){      
+      // Verifies if it's a 0 operands operation
+      std::regex stop_operand_regex("(^$)");
+
+      correct_operands_amount = std::regex_search (operand,
+                                                test_match,stop_operand_regex);                                            
+    } // if STOP
+
+    // Don't notify instructions at SECTION DATA
+    else if(matches[1].compare("CONST") == 0 &&
+            this->_section_identifier == DATA) {        
+      // Verifies if it's a 2 operands operation
+      std::regex const_operand_regex("(\\s)(\\d+)");
+
+      correct_operands_amount = std::regex_search (operand,
+                                                test_match,const_operand_regex);  
+    } // if CONST 
+
+    // Don't notify instructions at SECTION DATA
+    else if( matches[1].compare("SPACE") == 0 &&
+            this->_section_identifier == DATA) {
+      std::regex space_operand_regex("(^\\s\\d*\\n$|^\\s{0}\\n$)");
+
+      correct_operands_amount = std::regex_search (operand,
+                                                test_match,space_operand_regex);  
+    } // if SPACE
+
+    // Any other valid instruction at SECTION TEXT
+    else if (matches[1].compare("CONST") != 0 &&
+             matches[1].compare("SPACE") != 0 &&
+            this->_section_identifier == TEXT){
+      // Verifies if it's a 1 operand operation
+      std::regex regular_instrucion_operand_regex("(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+
+      correct_operands_amount = std::regex_search (operand,
+                                                test_match,regular_instrucion_operand_regex);      
+    }
+
+    //////////////////////////////////////////////
+    //**   ERROR CASE ----------------------------
+    //////////////////////////////////////////////   
+
+
+    if(correct_operands_amount == false){
+      error invalid_instruction(code_line,
+                            this->_current_line_number,
+                            error::error_08);
+
+      _assembling_errors->include_error(invalid_instruction);
+    }
+
+  } // if instruction_exist 
+}
 
 void Assembler::Error15Verify(int label_reference){
 

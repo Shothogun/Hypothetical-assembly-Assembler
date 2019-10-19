@@ -185,6 +185,14 @@ class Assembler{
     */
     void Error5Verify(std::string code_line);
 
+    //! Error5Verify()
+    /*! 
+     *  A method that verifies error 8 type at 
+     *  Parsing process. Check if instruction operands
+     *  amount is correct. 
+     *  If not, report error
+    */
+    void Error8Verify(std::string code_line);
 
     //! Error15Verify()
     /*! 
