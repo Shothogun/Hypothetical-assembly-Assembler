@@ -151,6 +151,14 @@ class Assembler{
      */
     int LabelIdentifier(std::string label, int use_type);
 
+    //! StoreLabelOccurrence(std::string label)
+    /*
+     *  Stores operand label information for possible error notifications
+     *  
+     */
+
+    void StoreLabelOperandOccurrence(std::string label_operand);
+
     //! ResolveLabelValue(std::string label);
     /*
      *  Once a label value mentioned earlier is defined,
@@ -168,6 +176,54 @@ class Assembler{
      *  Returns the SPACE size allocated.
      */
     int AllocSizeManager(int label_reference);
+
+    //! Error4Verify()
+    /*! 
+     *  A method that verifies error 4 type at 
+     *  Parsing process. Check if directive exist. 
+     *  If not, report error.
+    */
+    void Error4Verify(std::string code_line);
+
+    //! Error5Verify()
+    /*! 
+     *  A method that verifies error 5 type at 
+     *  Parsing process. Check if instruction exist. 
+     *  If not, report error
+    */
+    void Error5Verify(std::string code_line);
+
+    //! Error8Verify()
+    /*! 
+     *  A method that verifies error 8 type at 
+     *  Parsing process. Check if instruction operands
+     *  amount is correct. 
+     *  If not, report error
+    */
+    void Error8Verify(std::string code_line);
+
+
+    //! Error9Verify()
+    /*! 
+     *  Verify if the operand type is a valid value
+     *  at the instruction.
+    */
+    void Error9Verify(std::string code_line);
+
+    //! Error14Verify()
+    /*! 
+     *  Verifies if the argument value to a command(label+number)
+     *  or directive is invalid. Besides, verify if a label
+     *  that indicates location is modified at operation.
+    */
+    void Error14Verify(std::string code_line);
+
+    //! ModifyAdressLabelVerify()
+    /*! 
+     *  Besides, verify if a label
+     *  that indicates location is modified at operation.
+    */
+    void ModifyAdressLabelVerify(std::string code_line);
 
     //! Error15Verify()
     /*! 
@@ -204,61 +260,22 @@ class Assembler{
     */
     std::vector<std::string> _section_data_commands;
 
-    //! _DIV_operands;
+
+    //! _address_labels;
     /*!
-     *  Store labels of rows containing a DIV instruction
+     *  Store labels that indicates the object code memory
+     *  position. It's verified in operation that tries
+     *  modify it.
      * 
     */
-    std::map<int, std::string> _DIV_operands;
+    std::list<std::string> _address_labels;
     
-    //! _DIV_code_line;
-    /*!
-     *  Stores the code's line containing a DIV instruction 
-     * 
-    */
-    std::vector<std::string> _DIV_code_line;
-    
-    //! _DIV_line_number;
-    /*!
-     *  Stores the number of rows containing a DIV instruction 
-     * 
-    */
-    std::vector<int>  _DIV_line_number;
-
-    //! _JMP_operands
-    /*!
-     * Store labels of rows containing a DIV instruction
-     *
-    */
-   std::map<int, std::string> _JMP_operands;
-
-    //! _JMP_code_line
-    /*!
-     * Stores the code's line containing a DIV instruction 
-     *
-    */
-   std::vector<std::string> _JMP_code_line;
-
-    //! _JMP_line_number
-    /*!
-     * Stores the number of rows containing a DIV instruction 
-     *
-    */
-   std::vector<int>  _JMP_line_number;
-
     //!
     /*!
-     * Indicates the occurrence number of the DIV instruction
-     *
-    */
-    int DIV_occurrence_number = 0;
-
-    //! 
-    /*! 
-     * Indicates the occurrence number of the JMP instructions
-     *
-    */
-    int JMP_occurrence_number = 0;
+     *  Stores information about the occurrence of labels as
+     *  instruction parameters
+    */ 
+    std::vector<label_occurrence> _label_occurrences;
    
     static const  int   OFFSET = 0;
     static const  int   LINE   = 1;

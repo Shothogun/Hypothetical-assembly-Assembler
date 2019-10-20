@@ -1,18 +1,32 @@
-SECTION TEXT
-SECTION TEXT
-INPUT B
-INPUT H
-LOAD B
-MULT H
-COPY B,H
-DIV DOIS+2
-DIV DOIS
-STORE R
-OUTPUT R
-STOP
-SECTION DATA
-SECTION DATA
-B: SPACE
-H: SPACE
-R: SPACE
-DOIS: CONST 2
+end 0:	12
+end 1:	29
+end 2:	10
+end 3:	29
+end 4:	4
+end 5:	28
+end 6:	11
+end 7:	30
+end 8:	3
+end 9:	28
+end 10:	11
+end 11:	31
+end 12:	10
+end 13:	29
+end 14:	2
+end 15:	31
+end 16:	11
+end 17:	31
+end 18:	13
+end 19:	31
+end 20:	9
+end 21:	30
+end 22:	29
+end 23:	10
+end 24:	29
+end 25:	7
+end 26:	4
+end 27:	14
+end 28:	2
+end 29:	00
+end 30:	00
+end 31:	00

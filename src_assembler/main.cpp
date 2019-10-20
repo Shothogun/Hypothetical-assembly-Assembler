@@ -9,6 +9,13 @@
 using namespace std;
 
 int main(int argc,char* argv[]) {
+
+  if(argc < 2){
+    cout << "Error missing parameter!" << endl;
+    cout << "Provide a source code as a parameter."<< endl;
+    return 0;
+  }
+
   char* source_code_file_name = argv[1];
 
   // Creates the Preprocessed file instance, not preprocessed yet
