@@ -229,7 +229,7 @@ void Assembler::Assembling(){
 
 
 
-  /*debug
+  /*Debug
   std::vector<std::string>::iterator it;
   int i = 0;
   for(it = this->_object_file.begin(); it < this->_object_file.end(); it++){
@@ -361,7 +361,7 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify regular instruction ---------
   //////////////////////////////////////////////
   
-  std::regex INSTRUCTION_regex("(SECTION|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT)(\\s)(\\D+)(\\+\\d+|\\n)");
+  std::regex INSTRUCTION_regex("(SECTION|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT)(\\s)(^[a-z]|[A-Z]|_)(\\w*|\\d*)(\\+\\d+|\\n)");
 
   // Seek the instruction match
   is_a_regular_instruction = std::regex_search (code_line,
@@ -382,14 +382,17 @@ void Assembler::Parser(std::string code_line ){
     // 0: Instruction match
     // 1: Operator
     // 2: space character
-    // 3: Head character from the label
-    // 4: Tail from the label
-    // 5: Plus character
-    // 6: A digit
+    // 3: label
+    // 4: plus character
+    // 5: number
+
 
     this->_instruction_operator = matches[1].str();
-    this->_instruction_operand_1 = matches[3].str() + matches[4].str();
-    this->_operand_1_offset = matches[6].str();
+    this->_instruction_operand_1 = matches[3].str();
+    this->_operand_1_offset = matches[5].str();
+
+    // Verifies invalid argument occurence
+    this->ModifyAdressLabelVerify(code_line);
 
     // Stores information about the occurrence of the 
     // DIV instruction to report division by zero errors
@@ -467,6 +470,9 @@ void Assembler::Parser(std::string code_line ){
     // Indicates the line's command kind
     this->_line_type_identifier = COPY_TYPE;
 
+    // Verifies invalid argument occurence
+    this->ModifyAdressLabelVerify(code_line);
+
     //////////////////////////////////////////////
     //**   ERROR CASE ----------------------------
     //////////////////////////////////////////////        
@@ -483,7 +489,7 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify STOP -------------------------
   //////////////////////////////////////////////
   
-  std::regex STOP_instruction_regex("(^STOP)(\\s*$)");
+  std::regex STOP_instruction_regex("(STOP)");
 
   // Seek the instruction match
   is_a_STOP_instruction = std::regex_search (code_line,
@@ -934,6 +940,11 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
 
       else {
         ResolveLabelValue(label);
+
+        // It's a address label
+        if(this->_section_identifier == TEXT){
+          this->_address_labels.insert(_address_labels.begin(),label);
+        }
       }
       break;
     default:
@@ -971,6 +982,11 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       this->_symbol_table->set_definition(label, true);
       // Symbol location reference at code
       this->_symbol_table->set_list_address(label, -1);
+
+      // It's a address label
+      if(this->_section_identifier == TEXT){
+        this->_address_labels.insert(_address_labels.begin(),label);
+      }
       break;
     default:
       break;
@@ -1029,7 +1045,6 @@ void Assembler::ResolveLabelValue(std::string label){
                this->_object_file.end()); 
 
   while(label_reference != -1) {
-
     alloc_size = AllocSizeManager(label_reference);
 
     next_label_reference = stoi(this->_object_file[label_reference]);
@@ -1043,7 +1058,6 @@ void Assembler::ResolveLabelValue(std::string label){
     // The offset surpass the alloc maximum, that is alloc-size-1.
     // At offset 0, it's the base address
     if(alloc_size - 1 < this->_address_offset[label_reference][OFFSET]){
-
       error_line = this->_pre_file.begin()+(this->_address_offset[label_reference][LINE] - 1);
 
       // ERROR - Out-of-range label access
@@ -1078,7 +1092,7 @@ void Assembler::ResolveLabelValue(std::string label){
 int Assembler::AllocSizeManager(int label_reference){
 
   // Express SPACE allocated at the directive
-  std::string alloc_size_string = this->_instruction_operand_2;
+  std::string alloc_size_string;
 
   // How many bytes SPACE was stored
   int alloc_size_number;
@@ -1087,12 +1101,14 @@ int Assembler::AllocSizeManager(int label_reference){
   std::smatch space_matches;
   std::smatch const_matches;
   
-  std::regex space_regex("(SPACE)(\\s)(\\d+)");
-  std::regex const_regex("(CONST)(\\s)(\\d+)");
+  std::regex space_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(SPACE)(\\s)(\\d+)");
+  std::regex const_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(CONST)(\\s)(\\d+)");
   bool space_command = std::regex_search (this->_current_line_string,
                       space_matches,space_regex);
   bool const_command = std::regex_search (this->_current_line_string,
                       const_matches,const_regex);        
+
+  alloc_size_string = space_matches[7].str();
 
   // Some important details from this directive identify
   // process:
@@ -1102,11 +1118,10 @@ int Assembler::AllocSizeManager(int label_reference){
   //   The invalid directive will be reported at the 
   //   Assembling() function.
 
-
   // Store labels alloc size at SPACE command
   if(space_command){
     if(alloc_size_string.compare("") != 0) {
-      alloc_size_number = stoi(space_matches[3].str());
+      alloc_size_number = stoi(alloc_size_string);
       return alloc_size_number;  
     }
 
@@ -1215,7 +1230,7 @@ void Assembler::Error8Verify(std::string code_line) {
     else if(matches[1].compare("CONST") == 0 &&
             this->_section_identifier == DATA) {        
       // Verifies if it's a 2 operands operation
-      std::regex const_operand_regex("(\\s)(\\d+)");
+      std::regex const_operand_regex("(\\s)(\\w+)");
 
       correct_operands_amount = std::regex_search (operand,
                                                 test_match,const_operand_regex);  
@@ -1224,7 +1239,8 @@ void Assembler::Error8Verify(std::string code_line) {
     // Don't notify instructions at SECTION DATA
     else if( matches[1].compare("SPACE") == 0 &&
             this->_section_identifier == DATA) {
-      std::regex space_operand_regex("(^\\s\\d*\\n$|^\\s{0}\\n$)");
+      cout << operand<<endl;
+      std::regex space_operand_regex("(^\\s\\w*$|^\\s\\w*\\n$|^\\s{0}\\n$)");
 
       correct_operands_amount = std::regex_search (operand,
                                                 test_match,space_operand_regex);  
@@ -1270,8 +1286,6 @@ void Assembler::Error9Verify(std::string code_line) {
     std::string instruction_operator = matches[1].str();
     std::string instruction_operand = matches[3].str();
 
-    cout << instruction_operand << endl;
-
     if(instruction_operator.compare("COPY") == 0 &&
       this->_section_identifier == TEXT){
 
@@ -1295,8 +1309,7 @@ void Assembler::Error9Verify(std::string code_line) {
 
     else if(instruction_operator.compare("STOP") != 0 &&
             this->_section_identifier == TEXT){
-        cout << "PASSEI" << endl;
-      std::regex operand_type_regex("(^[a-z]|[A-Z]|_|[0-9])(\\d*\\w+|\\w+)");
+      std::regex operand_type_regex("(^[a-z]|[A-Z]|_|[0-9])(\\+\\w+|\\d*\\w+|\\w+)");
       std::smatch regular_instruction_match;
 
       // Check if begins with a valid instruction
@@ -1326,14 +1339,123 @@ void Assembler::Error9Verify(std::string code_line) {
 }
 
 void Assembler::Error14Verify(std::string code_line){
-  bool correct_operands_types = true;
+  bool correct_argument = true;
   std::smatch matches;
-  std::regex INSTRUCTION_regex("()(\\s)(.*)");
+  std::regex directive_regex("(CONST|SPACE)(\\s)(.*)");
 
-  // Check if begins with a valid instruction
-  bool valid_instruction = std::regex_search (code_line,
-                                              matches,INSTRUCTION_regex);
-                                              
+  // Check if begins with a valid directive 
+  bool valid_directive = std::regex_search (code_line,
+                                              matches,directive_regex);
+
+  // Case 1: Directive error case
+  if(valid_directive && this->_section_identifier == DATA
+    && matches[3].compare("") != 0){
+
+    std::string directive_operator = matches[1].str();
+    std::string directive_operand = matches[3].str();
+
+    std::regex operand_regex("(^[0-9])(\\d*)");
+
+    // Check if begins with a valid directive 
+    correct_argument = std::regex_search (directive_operand,
+                                          matches,operand_regex);
+
+  }
+
+  // Case 2: Label+number error
+
+  std::regex label_offset_regex("(\\w+)(\\s)(\\w+)(\\+)(\\w+)");
+
+  // Check if begins with a valid directive 
+  bool label_offset_case = std::regex_search (code_line,
+                                              matches,label_offset_regex);
+
+  if(label_offset_case){
+    std::string offset = matches[5].str();
+
+    std::regex label_offset_regex("(\\d+)");
+
+    // Check if begins with a valid directive 
+    correct_argument = std::regex_search (offset,
+                                               matches,label_offset_regex);
+  }                                              
+
+
+  //////////////////////////////////////////////
+  //**   ERROR CASE ----------------------------
+  //////////////////////////////////////////////   
+
+
+  if(correct_argument == false){
+    error invalid_instruction(code_line,
+                              this->_current_line_number,
+                              error::error_14);
+
+    _assembling_errors->include_error(invalid_instruction);
+  }
+
+}
+
+void Assembler::ModifyAdressLabelVerify(std::string code_line){
+  bool error_occurred = false;
+  std::smatch matches;
+  std::regex INSTRUCTION_regex("(STORE|INPUT|COPY)(\\s)(.*)");
+
+  std::regex_search (code_line, matches, INSTRUCTION_regex);
+
+  std::string instruction_operator  = matches[1].str();
+  std::string instruction_operand  =  matches[3].str();
+
+  
+
+  if((instruction_operator.compare("STORE") == 0 ||
+     instruction_operator.compare("INPUT") == 0) &&
+     this->_section_identifier == TEXT){
+      std::list<std::string>::iterator it = std::find (this->_address_labels.begin(),
+                                                         this->_address_labels.end(), 
+                                                         instruction_operand);
+
+      // This label is a address_label.
+      // Invalid modify operation.
+      if(it != this->_address_labels.end()){
+        error_occurred = true;
+      }
+
+  }
+
+  else if(instruction_operator.compare("COPY") == 0 && this->_section_identifier == TEXT){
+    std::regex INSTRUCTION_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+    bool regular_copy = std::regex_search (code_line, matches, INSTRUCTION_regex);
+    
+    if(regular_copy){
+      std::string destiny_operator = matches[8].str() + matches[9].str();
+
+      std::list<std::string>::iterator it = std::find (this->_address_labels.begin(),
+                                                         this->_address_labels.end(), 
+                                                         destiny_operator);
+
+      // This label is a address_label.
+      // Invalid modify operation.
+      if(it != this->_address_labels.end()){
+        error_occurred = true;
+      }
+    }
+  }
+  
+  //////////////////////////////////////////////
+  //**   ERROR CASE ----------------------------
+  //////////////////////////////////////////////   
+
+
+  if(error_occurred){
+    error invalid_instruction(code_line,
+                              this->_current_line_number,
+                              error::error_14);
+
+    _assembling_errors->include_error(invalid_instruction);
+  }
+
+
 }
 
 void Assembler::Error15Verify(int label_reference){
@@ -1371,7 +1493,7 @@ void Assembler::Error15Verify(int label_reference){
     bool copy_command = std::regex_search (*label_reference_line,
                     modify_const_match,copy_regex);
 
-    std::string destiny_operand = modify_const_match[3].str()+modify_const_match[4].str();
+    std::string destiny_operand = modify_const_match[8].str()+modify_const_match[9].str();
 
     // Verifies if destiny operand is the CONST label
     if(copy_command){
