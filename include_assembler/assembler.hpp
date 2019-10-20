@@ -141,6 +141,9 @@ class Assembler{
      *  Returns the value that will be inserted
      *  at object code:
      * 
+     *  label: label identified in the instruction
+     *  use_type: as a operand or declaring
+     * 
      *  Identify defined labels, returning its value.
      *  At the case of undefined labels, 
      *  creates a list of undefined labels in object code,
@@ -175,7 +178,7 @@ class Assembler{
      *  which object code address occurs the reference.
      *  Returns the SPACE size allocated.
      */
-    int AllocSizeManager(int label_reference);
+    int AllocSizeManager();
 
     //! Error4Verify()
     /*! 
@@ -230,8 +233,17 @@ class Assembler{
      *  A method that verifies error 15 type at 
      *  label value resolving process.
     */
-    void Error15Verify(int label_reference);
+    void Error15Verify(std::string code_line);
 
+    //! InvalidInstructionWrite()
+    /*! 
+     *  A method that writes garbage code
+     *  at invalid instructions. This is only
+     *  to give correct errors during the report,
+     *  by don't modifying the object code size
+     *  from the pretended.
+    */
+    void InvalidInstructionWrite(std::string code_line);
 
     //! _pre_file
     /*! 

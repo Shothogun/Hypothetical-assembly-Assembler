@@ -131,15 +131,17 @@ void fetch_execute_cycle(){
     } // switch
 
     PC_opcode = mem[PC];
+    std::cout << "PC    : " << PC << std::endl;
     std::cout << "ACC   : " << ACC<< std::endl;
     std::cout << "ADDR1 : " << OP1<< std::endl;
     std::cout << "CONT  : " << mem[OP1]<< std::endl;
-    std::cout << "PC  : "  << PC << std::endl;
 
     if(PC_opcode == COPY){
       std::cout << "ADDR2 : " << OP2<< std::endl;
       std::cout << "CONT  : " << mem[OP2]<< std::endl;
     }
+
+    std::cout << std::endl;
   } // while
 
 }

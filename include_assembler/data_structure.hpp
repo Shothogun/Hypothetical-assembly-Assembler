@@ -1,6 +1,7 @@
 #ifndef DATA_STRUCTURE_HPP
 #define DATA_STRUCTURE_HPP
 
+#include <vector>
 #include <string>
 #include <iterator>
 #include <map>

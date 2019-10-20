@@ -33,3 +33,6 @@
 .vscode/
 /exec_simulator/simulador
 /exec_assembler/montador
+exec_assembler/montador
+exec_simulator/simulador
+

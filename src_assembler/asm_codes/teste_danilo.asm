@@ -1,29 +1,22 @@
 	TRIANGULO: EQU 1
 
+SECTION DATA
+	B:	SPACE				
+	H:	SPACE		2
+	R:	SPACE 
+	DOIS:	CONST		2
 
 SECTION TEXT
 		INPUT		B
 		INPUT		H
-		LOAD		B
-A: B:	jmp		h
-		jmpp		b
-		jmpp		b
-		jmpn		h
-		jmpz		bisc		
-		MULT		H
+Biscoit:	COPY Q,B,C
+		LOAD		B		
+		MULT		H		
 		IF TRIANGULO
-		DIV		DOIS		
+		DIV		D		t
 		STORE		R
 		OUTPUT	R
-		STOP
+Banana:		STOP	A
 
 
 
-
-SECTION DATA
-	B:		
-SPACE
-	H:
-		SPACE
-	R:		SPACE
-	DOIS:	CONST		2

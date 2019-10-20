@@ -255,7 +255,7 @@ void Preprocessor::Preprocessing(){
     }
 
     // Fix labels on separate line
-    std::regex only_label("(((^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)\\s*)+)(\\n$)");
+    std::regex only_label("(((.*)(:)\\s*)+)(\\n$)");
     matched_only_label = std::regex_search(*source_code_line, matches, only_label); 
     if(matched_only_label){
       // Matches pattern at the directive EQU:
