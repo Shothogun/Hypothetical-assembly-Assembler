@@ -1,6 +1,4 @@
-BISCOITO:
-	TRIANGULO: 
-EQU 1
+	TRIANGULO: EQU 1
 
 
 SECTION TEXT
@@ -10,15 +8,11 @@ SECTION TEXT
 A: B:	jmp		h
 		jmpp		b
 		jmpp		b
-Amante: Biscoito:		jmpn		h
+		jmpn		h
 		jmpz		bisc		
 		MULT		H
 		IF TRIANGULO
-		DIV		DOIS
-		div		dois
-		div 		dois			
-biscoito: 
-		copy   H   ,    R
+		DIV		DOIS		
 		STORE		R
 		OUTPUT	R
 		STOP
@@ -32,4 +26,4 @@ SPACE
 	H:
 		SPACE
 	R:		SPACE
-	DOIS:	CONST		0
+	DOIS:	CONST		2

@@ -260,6 +260,16 @@ class Assembler{
     */
     std::vector<std::string> _section_data_commands;
 
+
+    //! _address_labels;
+    /*!
+     *  Store labels that indicates the object code memory
+     *  position. It's verified in operation that tries
+     *  modify it.
+     * 
+    */
+    std::list<std::string> _address_labels;
+    
     //!
     /*!
      *  Stores information about the occurrence of labels as

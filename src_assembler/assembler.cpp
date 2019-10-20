@@ -1092,7 +1092,7 @@ void Assembler::ResolveLabelValue(std::string label){
   std::smatch matches;
   std::regex invalid_destiny_regex("(.*)(SPACE|CONST|SECTION\\sTEXT|SECTION\\sDATA)([^:])");
 
-  if(std::regex_search(this->_current_line_string, matches, invalid_destiny_regex)){
+  if((label_value < this->_object_file.size()) && std::regex_search(this->_current_line_string, matches, invalid_destiny_regex)){
     vector<label_occurrence>::iterator itr;
     for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
       // Notifies an error if JMP goes to SECTION DATA
