@@ -7,7 +7,7 @@ This repository is the 1st project from the discipline System Software 2/2019 at
 Member                | Univeristy Id
 ----------------------|------------------
 Otho Teixeira Komatsu | 170020142
-Danilo Inácio         | 
+Danilo Inácio         | 170031861
 
 ## Technical Description
 
@@ -40,6 +40,9 @@ By executing this program, two files will be generated: to the directory ```/exe
 
 If the ```.asm``` contains errors, the assembler program will report all errors that the asm code contains.
 The report will indicate the line, the type of error(lexical, syntactic and semantic) and the error details at the wrong line from the ```.asm``` file.
+
+**Note**: The line number where an error occurred will be relative to ```.asm``` if it is 
+an error in the preprocess directives and will be relative to ```.pre``` for all other errors.
 
 ## Compiling and Running the program Simulador
 

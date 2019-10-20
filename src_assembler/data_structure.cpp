@@ -127,9 +127,9 @@ void symbol_table::PrintTable(){
   for (map<string, int[T_SIZE]>::iterator it= this->table.begin(); it!=this->table.end(); ++it)
     std::cout << it->first << " => " << it->second[0] << " " <<it->second[1]<< " "
       << it->second[2] << '\n';
-  }
+}
 
-  vector<string> symbol_table::search_not_defined(){
+vector<string> symbol_table::search_not_defined(){
   vector<string> not_defined;
   for(itr=table.begin(); itr!= table.end(); itr++){
     if(!itr->second[DEF]){
