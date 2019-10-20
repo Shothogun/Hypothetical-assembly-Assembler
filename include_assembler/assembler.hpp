@@ -185,7 +185,7 @@ class Assembler{
     */
     void Error5Verify(std::string code_line);
 
-    //! Error5Verify()
+    //! Error8Verify()
     /*! 
      *  A method that verifies error 8 type at 
      *  Parsing process. Check if instruction operands
@@ -193,6 +193,29 @@ class Assembler{
      *  If not, report error
     */
     void Error8Verify(std::string code_line);
+
+
+    //! Error9Verify()
+    /*! 
+     *  Verify if the operand type is a valid value
+     *  at the instruction.
+    */
+    void Error9Verify(std::string code_line);
+
+    //! Error14Verify()
+    /*! 
+     *  Verifies if the argument value to a command(label+number)
+     *  or directive is invalid. Besides, verify if a label
+     *  that indicates location is modified at operation.
+    */
+    void Error14Verify(std::string code_line);
+
+    //! ModifyAdressLabelVerify()
+    /*! 
+     *  Besides, verify if a label
+     *  that indicates location is modified at operation.
+    */
+    void ModifyAdressLabelVerify(std::string code_line);
 
     //! Error15Verify()
     /*! 
@@ -228,6 +251,15 @@ class Assembler{
      *  to the object file at the its ending.
     */
     std::vector<std::string> _section_data_commands;
+
+    //! _address_labels;
+    /*!
+     *  Store labels that indicates the object code memory
+     *  position. It's verified in operation that tries
+     *  modify it.
+     * 
+    */
+    std::list<std::string> _address_labels;
 
     //! _DIV_operands;
     /*!
