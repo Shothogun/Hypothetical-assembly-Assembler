@@ -124,8 +124,6 @@ void fetch_execute_cycle(){
       break;
 
     case STOP:
-      PC += 1;
-      return ;
       break;
 
     default:
@@ -136,12 +134,12 @@ void fetch_execute_cycle(){
     std::cout << "ACC   : " << ACC<< std::endl;
     std::cout << "ADDR1 : " << OP1<< std::endl;
     std::cout << "CONT  : " << mem[OP1]<< std::endl;
+    std::cout << "PC  : "  << PC << std::endl;
 
     if(PC_opcode == COPY){
       std::cout << "ADDR2 : " << OP2<< std::endl;
       std::cout << "CONT  : " << mem[OP2]<< std::endl;
     }
-
   } // while
 
 }
