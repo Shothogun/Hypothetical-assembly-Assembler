@@ -680,8 +680,6 @@ void Assembler::Parser(std::string code_line ){
           if((itr->get_label() == this->_current_label) && (itr->get_instruction_operator() == "DIV")){
             error div_zero_error(itr->get_code_line(), itr->get_line_number(),error::error_07);
             this->_assembling_errors->include_error(div_zero_error);
-            // Replaces the operand of CONST for 1
-            this->_instruction_operand_2 = "1";
           }
         }
       }
