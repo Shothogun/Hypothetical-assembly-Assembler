@@ -4,10 +4,10 @@ This repository is the 1st project from the discipline System Software 2/2019 at
 
 ## Members
 
-Member                | Univeristy Id
-----------------------|------------------
-Otho Teixeira Komatsu | 170020142
-Danilo Inácio         | 170031861
+Member                     | Univeristy Id
+---------------------------|------------------
+Otho Teixeira Komatsu      | 170020142
+Danilo Inácio dos S. Silva | 170031861
 
 ## Technical Description
 
