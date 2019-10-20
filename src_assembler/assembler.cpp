@@ -589,40 +589,40 @@ void Assembler::Parser(std::string code_line ){
   is_a_SPACE_directive = std::regex_search (code_line,
                                             matches,SPACE_directive_regex);                                        
 
-  if(is_a_SPACE_directive && 
-    this->_section_identifier == DATA){
+  if(is_a_SPACE_directive){  
+    if(this->_section_identifier == DATA){
+      // If instruction is correct, third regex
+      // group is always a number
+      std::regex CORRECT_SPACE_directive_regex("(^SPACE)(\\s*)(\\d*)(\\n$)");
 
-    // If instruction is correct, third regex
-    // group is always a number
-    std::regex CORRECT_SPACE_directive_regex("(^SPACE)(\\s*)(\\d*)(\\n$)");
+      // Seek the instruction match
+      is_a_SPACE_directive = std::regex_search (code_line,
+                                                matches,CORRECT_SPACE_directive_regex);
 
-    // Seek the instruction match
-    is_a_SPACE_directive = std::regex_search (code_line,
-                                              matches,CORRECT_SPACE_directive_regex);
+      // Matches pattern at directive SPACE:
+      // 0: Directive SPACE match
+      // 1: SPACE
+      // 2: space character
+      // 3: A digit
 
-    // Matches pattern at directive SPACE:
-    // 0: Directive SPACE match
-    // 1: SPACE
-    // 2: space character
-    // 3: A digit
+      this->_instruction_operator = matches[1].str();
+      this->_instruction_operand_2 = matches[3].str();
 
-    this->_instruction_operator = matches[1].str();
-    this->_instruction_operand_2 = matches[3].str();
+      // Indicates the line's command kind
+      this->_line_type_identifier = SPACE_TYPE;
 
-    // Indicates the line's command kind
-    this->_line_type_identifier = SPACE_TYPE;
-
-    /* Debug
-    std::cout<< "Directive: " << this->_instruction_operator << std::endl;
-    std::cout<< "Number   : " << this->_instruction_operand_2 << std::endl;
-    */
+      /* Debug
+      std::cout<< "Directive: " << this->_instruction_operator << std::endl;
+      std::cout<< "Number   : " << this->_instruction_operand_2 << std::endl;
+      */
+    }
 
     //////////////////////////////////////////////
     //**   ERROR CASE ----------------------------
     //////////////////////////////////////////////    
     
     // Check if it's in the correct section
-    if(this->_section_identifier != DATA){
+    else{
       error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
       this->_assembling_errors->include_error(wrong_section_error);
     }
@@ -638,49 +638,50 @@ void Assembler::Parser(std::string code_line ){
   is_a_CONST_directive = std::regex_search (code_line,
                                             matches,CONST_directive_regex);
 
-  if(is_a_CONST_directive && 
-    this->_section_identifier == DATA){
-    /*Debug
-    cout << code_line << endl;
-    */
-    // Matches pattern at directive SPACE:
-    // 0: Directive CONST match
-    // 1: CONST 
-    // 2: Space character
-    // 3: A number
+  if(is_a_CONST_directive){ 
+    if(this->_section_identifier == DATA){
+      /*Debug
+      cout << code_line << endl;
+      */
+      // Matches pattern at directive SPACE:
+      // 0: Directive CONST match
+      // 1: CONST 
+      // 2: Space character
+      // 3: A number
 
-    this->_instruction_operator = matches[1].str();
-    this->_instruction_operand_2 = matches[3].str() + matches[4].str() + matches[5].str();
+      this->_instruction_operator = matches[1].str();
+      this->_instruction_operand_2 = matches[3].str() + matches[4].str() + matches[5].str();
 
-    /*Debug
-    cout << this->_instruction_operator << endl;
-    cout << this->_instruction_operand_2 << endl;
-    */
+      /*Debug
+      cout << this->_instruction_operator << endl;
+      cout << this->_instruction_operand_2 << endl;
+      */
 
-    // Indicates the line's command kind
-    this->_line_type_identifier = CONST_TYPE;
+      // Indicates the line's command kind
+      this->_line_type_identifier = CONST_TYPE;
 
-    /* Debug
-    std::cout<< "Directive: " << this->_instruction_operator << std::endl;
-    std::cout<< "Number  : " << this->_instruction_operand_2 << std::endl;
-    */
+      /* Debug
+      std::cout<< "Directive: " << this->_instruction_operator << std::endl;
+      std::cout<< "Number  : " << this->_instruction_operand_2 << std::endl;
+      */
 
-    //////////////////////////////////////////////
-    //**   ERROR CASE ----------------------------
-    //////////////////////////////////////////////    
+      //////////////////////////////////////////////
+      //**   ERROR CASE ----------------------------
+      //////////////////////////////////////////////    
 
-    // Check CONST 0
-    long CONST_value = std::stol (this->_instruction_operand_2, nullptr, 0);
-    if(CONST_value == 0){
-      vector<label_occurrence>::iterator itr;
-      // Cycles through the vector of labels used by the DIV instruction
-      for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
-        // Notifies an error if the DIV statement uses the LABEL assigned to CONST 0
-        if((itr->get_label() == this->_current_label) && (itr->get_instruction_operator() == "DIV")){
-          error div_zero_error(itr->get_code_line(), itr->get_line_number(),error::error_07);
-          this->_assembling_errors->include_error(div_zero_error);
-          // Replaces the operand of CONST for 1
-          this->_instruction_operand_2 = "1";
+      // Check CONST 0
+      long CONST_value = std::stol (this->_instruction_operand_2, nullptr, 0);
+      if(CONST_value == 0){
+        vector<label_occurrence>::iterator itr;
+        // Cycles through the vector of labels used by the DIV instruction
+        for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
+          // Notifies an error if the DIV statement uses the LABEL assigned to CONST 0
+          if((itr->get_label() == this->_current_label) && (itr->get_instruction_operator() == "DIV")){
+            error div_zero_error(itr->get_code_line(), itr->get_line_number(),error::error_07);
+            this->_assembling_errors->include_error(div_zero_error);
+            // Replaces the operand of CONST for 1
+            this->_instruction_operand_2 = "1";
+          }
         }
       }
     }
@@ -690,7 +691,7 @@ void Assembler::Parser(std::string code_line ){
     //////////////////////////////////////////////        
 
     // Check if it's in the correct section
-    if(this->_section_identifier != DATA){
+    else{
       error wrong_section_error(this->_current_line_string, this->_current_line_number, error::error_06);
       this->_assembling_errors->include_error(wrong_section_error);
     }
