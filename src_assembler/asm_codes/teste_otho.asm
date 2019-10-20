@@ -57,3 +57,7 @@ COPY B, DOIS
 T: ALLOC 			2
 	R:		SPACE
 	dois:	CONST		2
+		ndois:	CONST		-2
+	hdois:	CONST		0x10
+	nhdois:	CONST		-0x10
+	234243fewfwe: CONST 1

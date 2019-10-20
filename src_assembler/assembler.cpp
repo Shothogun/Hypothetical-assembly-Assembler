@@ -287,7 +287,7 @@ void Assembler::Scanner(){
   
     const int MAX_SIZE_TOKEN = 50;
     std::smatch matches;
-    std::regex valid_token("(^\\d+$)|(^([a-z]|[A-Z]|_)(\\w+|\\d+)*$)");
+    std::regex valid_token("(^\\d+$)|(^([a-z]|[A-Z]|_)(\\w+|\\d+)*$)|((^\\-*)(0x|0X|)(\\d+$))");
     // Characters that separate tokens
     std::regex taps("\\s+|,|:|\\+");
     regex_token_iterator<string::iterator> itr(this->_current_line_string.begin(), this->_current_line_string.end(), taps, -1);
@@ -589,7 +589,8 @@ void Assembler::Parser(std::string code_line ){
   is_a_SPACE_directive = std::regex_search (code_line,
                                             matches,SPACE_directive_regex);                                        
 
-  if(is_a_SPACE_directive){
+  if(is_a_SPACE_directive && 
+    this->_section_identifier == DATA){
 
     // If instruction is correct, third regex
     // group is always a number
@@ -631,13 +632,17 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify CONST directive --------------
   //////////////////////////////////////////////
 
-  std::regex CONST_directive_regex("(CONST)(\\s)(\\d+)");
+  std::regex CONST_directive_regex("(CONST)(\\s)(\\-*)(0x|0X|)(\\d+)");
 
   // Seek the instruction match
   is_a_CONST_directive = std::regex_search (code_line,
                                             matches,CONST_directive_regex);
 
-  if(is_a_CONST_directive){
+  if(is_a_CONST_directive && 
+    this->_section_identifier == DATA){
+    /*Debug
+    cout << code_line << endl;
+    */
     // Matches pattern at directive SPACE:
     // 0: Directive CONST match
     // 1: CONST 
@@ -645,7 +650,12 @@ void Assembler::Parser(std::string code_line ){
     // 3: A number
 
     this->_instruction_operator = matches[1].str();
-    this->_instruction_operand_2 = matches[3].str();
+    this->_instruction_operand_2 = matches[3].str() + matches[4].str() + matches[5].str();
+
+    /*Debug
+    cout << this->_instruction_operator << endl;
+    cout << this->_instruction_operand_2 << endl;
+    */
 
     // Indicates the line's command kind
     this->_line_type_identifier = CONST_TYPE;
@@ -660,7 +670,8 @@ void Assembler::Parser(std::string code_line ){
     //////////////////////////////////////////////    
 
     // Check CONST 0
-    if(std::stoi(this->_instruction_operand_2) == 0){
+    long CONST_value = std::stol (this->_instruction_operand_2, nullptr, 0);
+    if(CONST_value == 0){
       vector<label_occurrence>::iterator itr;
       // Cycles through the vector of labels used by the DIV instruction
       for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
@@ -845,7 +856,7 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
       break;
 
     case CONST_TYPE:
-      label_const_value = stoi(this->_instruction_operand_2);
+      label_const_value = (int) std::stol (this->_instruction_operand_2, nullptr, 0);;
       this->_section_data_commands.insert(this->_section_data_commands.begin(), 
                               to_string(label_const_value)); 
       break;
