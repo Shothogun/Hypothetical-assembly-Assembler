@@ -179,7 +179,6 @@ void Assembler::Assembling(){
                         //////////////////////////////////////////////
     
     IdentifyCommandType();
-
     /* Debug
     std::cout << preprocessed_code_line;
     */ 
@@ -571,7 +570,7 @@ void Assembler::Parser(std::string code_line ){
      is_a_STOP_instruction == false &&
      is_a_COPY_instruction == false)
      && this->_section_identifier == TEXT)
-  {     
+  {
     this->Error5Verify(code_line);
     this->Error8Verify(code_line);
     this->Error9Verify(code_line);
@@ -680,8 +679,6 @@ void Assembler::Parser(std::string code_line ){
           if((itr->get_label() == this->_current_label) && (itr->get_instruction_operator() == "DIV")){
             error div_zero_error(itr->get_code_line(), itr->get_line_number(),error::error_07);
             this->_assembling_errors->include_error(div_zero_error);
-            // Replaces the operand of CONST for 1
-            this->_instruction_operand_2 = "1";
           }
         }
       }
@@ -1388,37 +1385,51 @@ void Assembler::Error9Verify(std::string code_line) {
     if(instruction_operator.compare("COPY") == 0 &&
       this->_section_identifier == TEXT){
 
-      std::regex copy_regex("(\\w+|\\d+)(,)(\\w+|\\d+)");
+      std::regex copy_regex("((^\\d+)(\\D+$)|\\D+)");
 
-      std::smatch copy_match;
-      // Check if begins with a valid instruction
-      bool valid_copy = std::regex_search (instruction_operand,
-                                           copy_match,copy_regex);
-      // only verifies valid copies 
-      // commands
-      if(valid_copy){
-        std::regex copy_regex("(\\D+)(,)(\\D+)");
 
-        correct_operands_types = std::regex_search (instruction_operand,
-                                                    copy_match,copy_regex);
-      }      
-        
+      // Characters that separate tokens
+      std::regex taps("\\s|,");
+      regex_token_iterator<string::iterator> itr(instruction_operand.begin(), instruction_operand.end(), taps, -1);
+      regex_token_iterator<string::iterator> end;
+
+      std::string token;
+      // Cycles through all tokens identified on the line.
+      while (itr != end){
+        token = *itr;
+        if(token != ""){
+          // Checks if it is a valid operand type(not a number types)
+          if(!std::regex_match(token, matches, copy_regex)){
+            correct_operands_types = false;
+          }
+        }
+        itr++;
+      }
     }
 
 
     else if(instruction_operator.compare("STOP") != 0 &&
             this->_section_identifier == TEXT){
-      std::regex operand_type_regex("(^[a-z]|[A-Z]|_|[0-9])(\\+\\w+|\\d*\\w+|\\w+)");
-      std::smatch regular_instruction_match;
+              
+      std::regex operand_type_regex("((^\\d+)(\\D+$)|\\D+)");
+      // Characters that separate tokens
+      std::regex taps("\\s");
+      regex_token_iterator<string::iterator> itr(instruction_operand.begin(), instruction_operand.end(), taps, -1);
+      regex_token_iterator<string::iterator> end;
 
-      // Check if begins with a valid instruction
-      correct_operands_types = std::regex_search(instruction_operand,
-                                                      regular_instruction_match, operand_type_regex);
-      
-      // At the none operands error, shall not report
-      if(instruction_operand.compare("") == 0){
-        correct_operands_types = true;
+      std::string token;
+      // Cycles through all tokens identified on the line.
+      while (itr != end){
+        token = *itr;
+        if(token != ""){
+          // Checks if it is a valid operand type(not a number types)
+          if(!std::regex_match(token, matches, operand_type_regex)){
+            correct_operands_types = false;
+          }
+        }
+        itr++;
       }
+
     }
 
 
@@ -1454,11 +1465,23 @@ void Assembler::Error14Verify(std::string code_line){
     std::string directive_operand = matches[3].str();
 
     std::regex operand_regex("(^[0-9])(\\d*)");
+    // Characters that separate tokens
+    std::regex taps("\\s");
+    regex_token_iterator<string::iterator> itr(directive_operand.begin(), directive_operand.end(), taps, -1);
+    regex_token_iterator<string::iterator> end;
 
-    // Check if begins with a valid directive 
-    correct_argument = std::regex_search (directive_operand,
-                                          matches,operand_regex);
-
+    std::string token;
+    // Cycles through all tokens identified on the line.
+    while (itr != end){
+      token = *itr;
+      if(token != ""){
+        // Checks if it is a valid operand type(not a number types)
+        if(!std::regex_match(token, matches, operand_regex)){
+          correct_argument = false;
+        }
+      }
+      itr++;
+    }
   }
 
   // Case 2: Label+number error
