@@ -86,6 +86,13 @@ class Assembler{
     */
     bool _exists = false;
 
+    //! _SECTION_TEXT_exist
+    /*!
+     *
+     * Indicates if a text section was found 
+    */ 
+    bool _SECTION_TEXT_exist = false;
+
     //! GenerateObjCode(std::string instruction);
     /*! 
      *  Produces a STOP object code instruction
@@ -106,6 +113,20 @@ class Assembler{
      */
     void GenerateObjCode(std::string instruction, std::string operand1,
                          std::string operand2);
+    //! Scanner(std::string source_code_line, int line_number)
+    /*! 
+      *
+      * Identify and validate tokens 
+    */
+    void Scanner(); 
+    
+    //! Parser(std::string code_line)
+    /*! 
+      *
+      * Identify and validate operators and 
+      * operands according to language syntax
+    */
+    void Parser(std::string code_line);
 
     //! IdentifyCommandType();
     /*
@@ -120,6 +141,9 @@ class Assembler{
      *  Returns the value that will be inserted
      *  at object code:
      * 
+     *  label: label identified in the instruction
+     *  use_type: as a operand or declaring
+     * 
      *  Identify defined labels, returning its value.
      *  At the case of undefined labels, 
      *  creates a list of undefined labels in object code,
@@ -129,6 +153,14 @@ class Assembler{
      *  updates list_address at symbol table to the new reference address
      */
     int LabelIdentifier(std::string label, int use_type);
+
+    //! StoreLabelOccurrence(std::string label)
+    /*
+     *  Stores operand label information for possible error notifications
+     *  
+     */
+
+    void StoreLabelOperandOccurrence(std::string label_operand);
 
     //! ResolveLabelValue(std::string label);
     /*
@@ -146,15 +178,72 @@ class Assembler{
      *  which object code address occurs the reference.
      *  Returns the SPACE size allocated.
      */
-    int AllocSizeManager(int label_reference);
+    int AllocSizeManager();
+
+    //! Error4Verify()
+    /*! 
+     *  A method that verifies error 4 type at 
+     *  Parsing process. Check if directive exist. 
+     *  If not, report error.
+    */
+    void Error4Verify(std::string code_line);
+
+    //! Error5Verify()
+    /*! 
+     *  A method that verifies error 5 type at 
+     *  Parsing process. Check if instruction exist. 
+     *  If not, report error
+    */
+    void Error5Verify(std::string code_line);
+
+    //! Error8Verify()
+    /*! 
+     *  A method that verifies error 8 type at 
+     *  Parsing process. Check if instruction operands
+     *  amount is correct. 
+     *  If not, report error
+    */
+    void Error8Verify(std::string code_line);
+
+
+    //! Error9Verify()
+    /*! 
+     *  Verify if the operand type is a valid value
+     *  at the instruction.
+    */
+    void Error9Verify(std::string code_line);
+
+    //! Error14Verify()
+    /*! 
+     *  Verifies if the argument value to a command(label+number)
+     *  or directive is invalid. Besides, verify if a label
+     *  that indicates location is modified at operation.
+    */
+    void Error14Verify(std::string code_line);
+
+    //! ModifyAdressLabelVerify()
+    /*! 
+     *  Besides, verify if a label
+     *  that indicates location is modified at operation.
+    */
+    void ModifyAdressLabelVerify(std::string code_line);
 
     //! Error15Verify()
     /*! 
      *  A method that verifies error 15 type at 
      *  label value resolving process.
     */
-    void Error15Verify(int label_reference);
+    void Error15Verify(std::string code_line);
 
+    //! InvalidInstructionWrite()
+    /*! 
+     *  A method that writes garbage code
+     *  at invalid instructions. This is only
+     *  to give correct errors during the report,
+     *  by don't modifying the object code size
+     *  from the pretended.
+    */
+    void InvalidInstructionWrite(std::string code_line);
 
     //! _pre_file
     /*! 
@@ -169,7 +258,12 @@ class Assembler{
     */
     std::vector<std::string> _object_file;
 
-
+    //! _section_data_preprocessed
+    /*!
+     * Stores code from date section for later evaluation
+     * 
+    */
+    std::vector<std::string> _section_data_preprocessed;
     //! _section_data_commands
     /*! 
      *  Stores the preprocessed code's section data
@@ -178,16 +272,32 @@ class Assembler{
     */
     std::vector<std::string> _section_data_commands;
 
+
+    //! _address_labels;
+    /*!
+     *  Store labels that indicates the object code memory
+     *  position. It's verified in operation that tries
+     *  modify it.
+     * 
+    */
+    std::list<std::string> _address_labels;
+    
+    //!
+    /*!
+     *  Stores information about the occurrence of labels as
+     *  instruction parameters
+    */ 
+    std::vector<label_occurrence> _label_occurrences;
+   
+    static const  int   OFFSET = 0;
+    static const  int   LINE   = 1;
+
     //! _address_offset
     /*! 
      *  Stores all address offset.
      *  First value: offset
      *  Second value: line occurred it
     */
-   
-    static const  int   OFFSET = 0;
-    static const  int   LINE   = 1;
-
     map<int, int[2]> _address_offset;
 
     //! _current_line_string
@@ -196,10 +306,16 @@ class Assembler{
     */
     std::string _current_line_string;
 
+    //! _current_label
+    /*!
+      * Store last label found 
+    */
+    std::string _current_label;
     //! _instruction_operator
     /*! 
      *  Stores the command operator from preprocessed line instruction
     */
+
     std::string _instruction_operator;
 
     //! _instruction_operand_1
