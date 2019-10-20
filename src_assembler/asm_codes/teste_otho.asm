@@ -10,12 +10,14 @@ SECTION TEXT
 		INPUT		B   ; isso aqui é um triangulo
 	; isso aqui é um triangulo
 INPUT 1			; Erro 9
+
 		COPY  2,B		; Erro 9
 		COPY  B,2		; Erro 9
 		INPUT		H
 		INPUT				; Erro 8
 Z:		INPUT		23H
 		ADD 		B+A				; Erro 14
+		INPUT DOIS	; Erro 15
 	INPUT z				; Erro 14
 		COPY 		B		; Erro 8
 		STOP B 			; Erro 8
@@ -32,6 +34,8 @@ Z:		INPUT		23H
 		COPY		B,							DOIS
 		STORE		R
 		OUTPUT	R
+		AT: CONST 2
+
 		STOP
 
 
@@ -44,7 +48,6 @@ Z:		INPUT		23H
 
 		
 SECTION DATA
-qwewqewqewq 2
 	A: 	CONST						; Erro 8
 	C:		sPace 4 5			; Erro 8
 D: space2							; Erro 8
@@ -60,4 +63,5 @@ T: ALLOC 			2
 		ndois:	CONST		-2
 	hdois:	CONST		0x10
 	nhdois:	CONST		-0x10
+INPUT A
 	234243fewfwe: CONST 1
