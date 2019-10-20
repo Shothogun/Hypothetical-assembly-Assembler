@@ -1,16 +1,23 @@
-	TRIANGULO: EQU 1
+	1TRIANGULO: 
+EQU 1
 
+
+SECTION DATA
+	B:		
+SPACE
+	H:
+		SPACE
+	R:		
+SPACE
+	DOIS:	
+
+CONST		2
 
 SECTION TEXT
 		INPUT		B
 		INPUT		H
-		LOAD		B
-A: B:	jmp		h
-		jmpp		b
-		jmpp		b
-		jmpn		h
-		jmpz		bisc		
-		MULT		H
+		LOAD		B		
+		MULT		H		
 		IF TRIANGULO
 		DIV		DOIS		
 		STORE		R
@@ -19,11 +26,3 @@ A: B:	jmp		h
 
 
 
-
-SECTION DATA
-	B:		
-SPACE
-	H:
-		SPACE
-	R:		SPACE
-	DOIS:	CONST		2
