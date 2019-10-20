@@ -1324,7 +1324,6 @@ void Assembler::Error8Verify(std::string code_line) {
     // Don't notify instructions at SECTION DATA
     else if( matches[1].compare("SPACE") == 0 &&
             this->_section_identifier == DATA) {
-      cout << operand<<endl;
       std::regex space_operand_regex("(^\\s\\w*$|^\\s\\w*\\n$|^\\s{0}\\n$)");
 
       correct_operands_amount = std::regex_search (operand,
