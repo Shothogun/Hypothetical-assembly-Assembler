@@ -1,55 +1,22 @@
-	TRIANGULO: 
-EQU 1
-
+	TRIANGULO: EQU 1
 
 SECTION DATA
-	B:		
-SPACE	DADO			;argumento inválido		
-	H:
-		SPACE
-	R:		
-SPACE
-	DOIS:	
-JMP	BISCOITO		;instrução na seção errada
-
-CONST		dois		;argumento inválido
-
-CONSTA	1	;diretiva inválida
-
-SECTION biscoito		;seção inválida
+	B:	SPACE				
+	H:	SPACE		2
+	R:	SPACE 
+	DOIS:	CONST		2
 
 SECTION TEXT
 		INPUT		B
 		INPUT		H
-		
-		DIV	0 ;instrução c omparametros inválidos
-
-		DIV    1 a	;quantidade de parametros inválida
-		STOP	a	;quantidade de parametros inválida
-
-
-		JMP		d	;saltos para label inválido
-		JMPP		d
-		JMPN		c
-		JMPZ		a		
-		
-1BISC: 					;token inválido
-	BISCO:				;dois labels na mesma linha
-		STOP
-		A:	const 0		;diretivas na seção errada
-		C:	SPACE
-
-		A: div		DOIS    ;label repetido
-
-		ACC	BISCO    ;instrução inválida
-				
+Biscoit:	COPY Q,B,C
 		LOAD		B		
 		MULT		H		
 		IF TRIANGULO
-		DIV		DOIS		
+		DIV		D		t
 		STORE		R
 		OUTPUT	R
-		STOP
+Banana:		STOP	A
 
 
 

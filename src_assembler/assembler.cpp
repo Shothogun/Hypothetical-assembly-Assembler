@@ -477,7 +477,7 @@ void Assembler::Parser(std::string code_line ){
   //////////////////////////////////////////////
   //**   Identify COPY instruction -------------
   //////////////////////////////////////////////
-  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)$");
 
   // Seek the instruction match
   is_a_COPY_instruction = std::regex_search (code_line,
@@ -537,7 +537,7 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify STOP -------------------------
   //////////////////////////////////////////////
   
-  std::regex STOP_instruction_regex("(STOP)");
+  std::regex STOP_instruction_regex("(STOP)$");
 
   // Seek the instruction match
   is_a_STOP_instruction = std::regex_search (code_line,
@@ -1305,15 +1305,14 @@ void Assembler::Error8Verify(std::string code_line) {
   
   // Only analyse valid instruction
   if(instruction_exist) {
-
     std::string operand = matches[2].str() + matches[3].str();
     std::smatch test_match;
 
     // Don't notify directives at SECTION TEXT
     if(matches[1].compare("COPY") == 0 && 
-      this->_section_identifier == TEXT){
+      this->_section_identifier == TEXT){  
       // Verifies if it's a 2 operands operation
-      std::regex copy_operand_regex("(\\s)(\\w+|\\d+)(,)(\\w+|\\d+)");
+      std::regex copy_operand_regex("^(\\s*)(\\w+|\\d+)(,)(\\w+|\\d+)$");
       correct_operands_amount = std::regex_search (operand,
                                                 test_match,copy_operand_regex);      
     }
@@ -1321,7 +1320,7 @@ void Assembler::Error8Verify(std::string code_line) {
     else if(matches[1].compare("STOP") == 0 && 
             this->_section_identifier == TEXT){      
       // Verifies if it's a 0 operands operation
-      std::regex stop_operand_regex("(^$)");
+      std::regex stop_operand_regex("^$");
 
       correct_operands_amount = std::regex_search (operand,
                                                 test_match,stop_operand_regex);                                            
@@ -1331,7 +1330,7 @@ void Assembler::Error8Verify(std::string code_line) {
     else if(matches[1].compare("CONST") == 0 &&
             this->_section_identifier == DATA) {        
       // Verifies if it's a 2 operands operation
-      std::regex const_operand_regex("(\\s)(\\w+)");
+      std::regex const_operand_regex("^(\\s)(\\w+)$");
 
       correct_operands_amount = std::regex_search (operand,
                                                 test_match,const_operand_regex);  
@@ -1351,7 +1350,7 @@ void Assembler::Error8Verify(std::string code_line) {
              matches[1].compare("SPACE") != 0 &&
             this->_section_identifier == TEXT){
       // Verifies if it's a 1 operand operation
-      std::regex regular_instrucion_operand_regex("(\\s)(\\w*|\\d*)(\\+*)(\\d*)");
+      std::regex regular_instrucion_operand_regex("^(\\s)(\\w*|\\d*)(\\+*)(\\d*)$");
 
       correct_operands_amount = std::regex_search (operand,
                                                 test_match,regular_instrucion_operand_regex);      
