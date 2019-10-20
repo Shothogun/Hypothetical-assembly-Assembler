@@ -9,6 +9,9 @@
 SECTION TEXT
 		INPUT		B   ; isso aqui é um triangulo
 	; isso aqui é um triangulo
+INPUT 1			; Erro 9
+		COPY  2,B		; Erro 9
+		COPY  B,2		; Erro 9
 		INPUT		H
 		INPUT				; Erro 8
 		INPUT		23H
@@ -22,6 +25,7 @@ SECTION TEXT
 		COPY		B +1 	,						H    + 2
 		IF triangulo
 		DIV		DOIS +						1
+				COPY		DOIS+1,   	H		; Erro 15
 		COPY		DOIS+1,   	B		
 		COPY		B,							DOIS
 		STORE		R
