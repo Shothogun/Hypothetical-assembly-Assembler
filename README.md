@@ -39,7 +39,7 @@ Substitutes ```<file_name.asm>``` by the name of the desired asm file that will 
 By executing this program, two files will be generated: to the directory ```/exec_assembler/obj_files/```, ```file_name.obj``` (the machine code file), and to the directory ```/exec_assembler/pre_files/```, ```file_name.pre``` (the preprocessed source code file).
 
 If the ```.asm``` contains errors, the assembler program will report all errors that the asm code contains.
-The report will indicate the line, the type of error(lexical, syntactic and semantic) and the error details at the wrong line from the ```.asm``` file.
+The report will indicate the line, line number, the type of error(lexical, syntactic and semantic) and the error details at the wrong line from the ```.asm``` file.
 
 **Note**: The line number where an error occurred will be relative to ```.asm``` if it is 
 an error in the preprocess directives and will be relative to ```.pre``` for all other errors.
