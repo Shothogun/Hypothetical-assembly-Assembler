@@ -139,10 +139,11 @@ vector<string> symbol_table::search_not_defined(){
     return not_defined;
 }
 
-// CLASS LABER_OCCURRENCE
+// CLASS LABEL_OCCURRENCE
 
-label_occurrence::label_occurrence(string label, string code_line, int line_number){
+label_occurrence::label_occurrence(string label, string instruction_operator, string code_line, int line_number){
     this->label = label;
+    this->instruction_operator = instruction_operator;
     this->code_line = code_line;
     this->line_number = line_number;
 }

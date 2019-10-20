@@ -78,12 +78,16 @@ public:
 // This class stores information about an occurrence of a label
 class label_occurrence{
 private:
+    string instruction_operator;
     string code_line;
     int line_number;
     string label;
 public:
-    label_occurrence(string label, string code_line, int line_number);
+    label_occurrence(string label, string instruction_operator, string code_line, int line_number);
 
+    void set_instruction_operator(string instruction_operator){
+        this->instruction_operator = instruction_operator;
+    }
     void set_label(string label){
         this->label = label;
     }
@@ -92,6 +96,9 @@ public:
     }
     void set_line_number(int line_number){
         this->line_number = line_number;
+    }
+    string get_instruction_operator(){
+        return this->instruction_operator;
     }
     string get_label(){
         return this->label;

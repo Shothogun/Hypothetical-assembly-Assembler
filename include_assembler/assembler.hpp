@@ -153,7 +153,7 @@ class Assembler{
 
     //! StoreLabelOccurrence(std::string label)
     /*
-     *  
+     *  Stores operand label information for possible error notifications
      *  
      */
 
@@ -239,22 +239,8 @@ class Assembler{
 
     //!
     /*!
-     *
-     * 
-    */
-    std::vector<label_occurrence> _JMP_label_occurrences;
-
-    //!
-    /*!
-     *
-     * 
-    */ 
-    std::vector<label_occurrence> _DIV_label_occurrences;
-
-    //!
-    /*!
-     *
-     * 
+     *  Stores information about the occurrence of labels as
+     *  instruction parameters
     */ 
     std::vector<label_occurrence> _label_occurrences;
    

@@ -214,16 +214,27 @@ void Assembler::Assembling(){
   
   }
 
+        //////////////////////////////////////////////
+        //**   ERROR CASE ----------------------------
+        //////////////////////////////////////////////   
+
   vector<string> not_defined = this->_symbol_table->search_not_defined();
   vector<string>::iterator itr1;
   vector<label_occurrence>::iterator itr2;
 
-  
+  // Notifies an error if label is no defined
   for(itr1=not_defined.begin(); itr1!=not_defined.end(); itr1++){
     for(itr2=this->_label_occurrences.begin(); itr2!=this->_label_occurrences.end(); itr2++){
       if(*itr1 == itr2->get_label()){
         error undefined_label_error(itr2->get_code_line(), itr2->get_line_number(), error::error_00);
         this->_assembling_errors->include_error(undefined_label_error);
+        if((itr2->get_instruction_operator() == "JMP") ||
+          (itr2->get_instruction_operator() == "JMPZ") ||
+          (itr2->get_instruction_operator() == "JMPP") ||
+          (itr2->get_instruction_operator() == "JMPN")){
+          error undefined_label_error(itr2->get_code_line(), itr2->get_line_number(), error::error_02);
+          this->_assembling_errors->include_error(undefined_label_error);
+        }    
       }
     }  
   }
@@ -385,7 +396,7 @@ void Assembler::Parser(std::string code_line ){
     // Consider the last label
     // and notify two labels error
     this->_current_label = matches2[3].str() + matches2[4].str();
-    code_line = std::regex_replace (code_line,two_label_regex,"$5");
+    code_line = std::regex_replace (code_line,two_label_regex,"$6");
     LabelIdentifier(this->_current_label, LABEL_DEFINITION);
     error two_labels_error(this->_current_line_string, this->_current_line_number, error::error_11);
     this->_assembling_errors->include_error(two_labels_error);
@@ -637,9 +648,9 @@ void Assembler::Parser(std::string code_line ){
     if(std::stoi(this->_instruction_operand_2) == 0){
       vector<label_occurrence>::iterator itr;
       // Cycles through the vector of labels used by the DIV instruction
-      for(itr = this->_DIV_label_occurrences.begin(); itr!=this->_DIV_label_occurrences.end(); itr++){
+      for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
         // Notifies an error if the DIV statement uses the LABEL assigned to CONST 0
-        if(itr->get_label() == this->_current_label){
+        if((itr->get_label() == this->_current_label) && (itr->get_instruction_operator() == "DIV")){
           error div_zero_error(itr->get_code_line(), itr->get_line_number(),error::error_07);
           this->_assembling_errors->include_error(div_zero_error);
           // Replaces the operand of CONST for 1
@@ -673,23 +684,9 @@ void Assembler::Parser(std::string code_line ){
 }
 
 void Assembler::StoreLabelOperandOccurrence(std::string label_operand){
-  std::smatch matches;
-  std::regex JMP_regex("\\bJMP");
 
-  // Stores information about the occurrence of the 
-  // DIV instruction to report division by zero errors
-  if(this->_instruction_operator == "DIV"){
-    label_occurrence occurrence(label_operand, this->_current_line_string, this->_current_line_number);
-    this->_DIV_label_occurrences.insert(this->_DIV_label_occurrences.end(), occurrence);
-  }
-  // Stores information about the occurrence of the 
-  // JMP instruction to report JMP errors
-  else if(std::regex_search(this->_instruction_operator, matches, JMP_regex)){
-    label_occurrence occurrence(label_operand, this->_current_line_string, this->_current_line_number);
-    this->_JMP_label_occurrences.insert(this->_JMP_label_occurrences.end(), occurrence);
-  }
   // Stores operand label information for possible error notifications
-  label_occurrence occurrence(label_operand, this->_current_line_string, this->_current_line_number);
+  label_occurrence occurrence(label_operand, this->_instruction_operator, this->_current_line_string, this->_current_line_number);
   this->_label_occurrences.insert(this->_label_occurrences.end(), occurrence);
 
 }
@@ -1041,7 +1038,7 @@ void Assembler::ResolveLabelValue(std::string label){
   // used for location of label at the object code.
   // Must be added to section data because codes are 
   // stored in differents vectors.
-  int label_value = this->_object_file.size() + this->_section_data_commands.size();
+  uint label_value = this->_object_file.size() + this->_section_data_commands.size();
 
     //////////////////////////////////////////////
     //**   ERROR CASE ----------------------------
@@ -1051,11 +1048,34 @@ void Assembler::ResolveLabelValue(std::string label){
   if(label_value >= this->_object_file.size()){
     vector<label_occurrence>::iterator itr;
     // Cycles through the vector of labels used by the JMP instructions
-    for(itr = this->_JMP_label_occurrences.begin(); itr!=this->_JMP_label_occurrences.end(); itr++){
+    for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
       // Notifies an error if JMP goes to SECTION DATA
-      if(itr->get_label() == label){
+      if((itr->get_label() == label) && ((itr->get_instruction_operator() == "JMP") ||
+      (itr->get_instruction_operator() == "JMPZ") ||
+      (itr->get_instruction_operator() == "JMPP") ||
+      (itr->get_instruction_operator() == "JMPN"))){
         error JMP_wrong_section_error(itr->get_code_line(), itr->get_line_number(),error::error_03);
         this->_assembling_errors->include_error(JMP_wrong_section_error);
+        error JMP_invalid_label_error(itr->get_code_line(), itr->get_line_number(),error::error_02);
+        this->_assembling_errors->include_error(JMP_invalid_label_error);
+      }
+    }
+  }
+
+  // Check JMP for SPACE, CONST, SECTION TEXT and SECTION DATA
+  std::smatch matches;
+  std::regex invalid_destiny_regex("(.*)(SPACE|CONST|SECTION\\sTEXT|SECTION\\sDATA)([^:])");
+
+  if(std::regex_search(this->_current_line_string, matches, invalid_destiny_regex)){
+    vector<label_occurrence>::iterator itr;
+    for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
+      // Notifies an error if JMP goes to SECTION DATA
+      if((itr->get_label() == label) && ((itr->get_instruction_operator() == "JMP") ||
+      (itr->get_instruction_operator() == "JMPZ") ||
+      (itr->get_instruction_operator() == "JMPP") ||
+      (itr->get_instruction_operator() == "JMPN"))){
+        error JMP_invalid_label_error(itr->get_code_line(), itr->get_line_number(),error::error_02);
+        this->_assembling_errors->include_error(JMP_invalid_label_error);
       }
     }
   }
