@@ -709,6 +709,7 @@ void Assembler::Parser(std::string code_line ){
     this->Error4Verify(code_line);
     this->Error8Verify(code_line);
     this->Error14Verify(code_line);
+    this->InvalidInstructionWrite(code_line);
   }
 }
 
@@ -1564,6 +1565,8 @@ void Assembler::Error15Verify(std::string label){
   bool CONST_label =  std::regex_search (this->_current_line_string,
                       label_match,label_regex);
 
+  
+
   // Don't analyse when is not a CONST
   // label
   if (!CONST_label){
@@ -1574,16 +1577,16 @@ void Assembler::Error15Verify(std::string label){
       it < this->_label_occurrences.end(); ++it)
   {
     // Verifies code operations that uses
-    // the defined label
+    // the defined label and at SECTION TEXT
     if(it->get_label().compare(label) == 0){
 
       // Line where the reference occurs
       std::string label_reference_line = it->get_code_line();
       int label_reference_line_number = it->get_line_number();
       
-      // Debug
+      /* Debug
       cout << label_reference_line << endl;
-      //
+      */
 
       // Analyse operation at CONST labels
       std::smatch modify_const_match;
@@ -1634,7 +1637,7 @@ void Assembler::Error15Verify(std::string label){
 
 void Assembler::InvalidInstructionWrite(std::string code_line){
   std::smatch matches;
-  std::regex size_2_regex("(ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT)(\\s)(.*)");
+  std::regex size_2_regex("(CONST|SPACES|ADD|SUB|MULT|DIV|JMP|JMPN|JMPP|JMPZ|LOAD|STORE|INPUT|OUTPUT)(\\s)(.*)");
 
   // Check if begins with a valid instruction
   bool size_2_operation = std::regex_search (code_line,
