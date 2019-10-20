@@ -179,7 +179,6 @@ void Assembler::Assembling(){
                         //////////////////////////////////////////////
     
     IdentifyCommandType();
-
     /* Debug
     std::cout << preprocessed_code_line;
     */ 
@@ -571,7 +570,7 @@ void Assembler::Parser(std::string code_line ){
      is_a_STOP_instruction == false &&
      is_a_COPY_instruction == false)
      && this->_section_identifier == TEXT)
-  {     
+  {
     this->Error5Verify(code_line);
     this->Error8Verify(code_line);
     this->Error9Verify(code_line);
@@ -1386,21 +1385,26 @@ void Assembler::Error9Verify(std::string code_line) {
     if(instruction_operator.compare("COPY") == 0 &&
       this->_section_identifier == TEXT){
 
-      std::regex copy_regex("(\\w+|\\d+)(,)(\\w+|\\d+)");
+      std::regex copy_regex("((^\\d+)(\\D+$)|\\D+)");
 
-      std::smatch copy_match;
-      // Check if begins with a valid instruction
-      bool valid_copy = std::regex_search (instruction_operand,
-                                           copy_match,copy_regex);
-      // only verifies valid copies 
-      // commands
-      if(valid_copy){
-        std::regex copy_regex("(.*)(\\D+)(,)(\\D+)(\\s)(.*)");
 
-        correct_operands_types = std::regex_search (instruction_operand,
-                                                    copy_match,copy_regex);
-      }      
-        
+      // Characters that separate tokens
+      std::regex taps("\\s|,");
+      regex_token_iterator<string::iterator> itr(instruction_operand.begin(), instruction_operand.end(), taps, -1);
+      regex_token_iterator<string::iterator> end;
+
+      std::string token;
+      // Cycles through all tokens identified on the line.
+      while (itr != end){
+        token = *itr;
+        if(token != ""){
+          // Checks if it is a valid operand type(not a number types)
+          if(!std::regex_match(token, matches, copy_regex)){
+            correct_operands_types = false;
+          }
+        }
+        itr++;
+      }
     }
 
 
