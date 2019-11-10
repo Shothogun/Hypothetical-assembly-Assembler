@@ -332,6 +332,9 @@ void Assembler::Parser(std::string code_line ){
   // Indicates that is a CONST directive
   bool is_a_CONST_directive = false;
 
+  // Indicates that is a SECTION directive
+  bool is_a_SECTION = false;
+
   // Indicates that is a label definition
   bool label_definition = false;
 
@@ -408,8 +411,7 @@ void Assembler::Parser(std::string code_line ){
     std::cout << this->_instruction_operand_1 << std::endl;
     */      
   }
-
-                          
+                        
                       //////////////////////////////////////////////
                       //**   Separate elements from line
                       //////////////////////////////////////////////
@@ -418,6 +420,19 @@ void Assembler::Parser(std::string code_line ){
   is_a_COPY_instruction = false;
   is_a_STOP_instruction = false;
 
+  //////////////////////////////////////////////
+  //**   Identify SECTION diretive ------------
+  //////////////////////////////////////////////
+
+  std::regex SECTION_regex("(SECTION)(\\s)(DATA|TEXT)");
+
+  // Seek the SECTION match
+  is_a_SECTION = std::regex_search (code_line,
+                                    matches,SECTION_regex);
+
+  if(is_a_SECTION){
+    return;
+  }
 
   //////////////////////////////////////////////
   //**   Identify regular instruction ---------
@@ -476,7 +491,7 @@ void Assembler::Parser(std::string code_line ){
   //////////////////////////////////////////////
   //**   Identify COPY instruction -------------
   //////////////////////////////////////////////
-  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)$");
+  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
 
   // Seek the instruction match
   is_a_COPY_instruction = std::regex_search (code_line,
@@ -536,7 +551,7 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify STOP -------------------------
   //////////////////////////////////////////////
   
-  std::regex STOP_instruction_regex("(STOP)$");
+  std::regex STOP_instruction_regex("(STOP)");
 
   // Seek the instruction match
   is_a_STOP_instruction = std::regex_search (code_line,
@@ -703,6 +718,10 @@ void Assembler::Parser(std::string code_line ){
      is_a_CONST_directive == false)
      && this->_section_identifier == DATA)
   {     
+    // Debug
+      std::cout << this->_current_line_string << endl;  
+      std::cout << this->_current_line_number << endl;                                          
+    //
     this->Error4Verify(code_line);
     this->Error8Verify(code_line);
     this->Error14Verify(code_line);
@@ -1677,8 +1696,7 @@ void Assembler::InvalidInstructionWrite(std::string code_line){
   // Check if begins with a valid instruction
   bool size_1_operation = std::regex_search (code_line,
                                               matches,size_1_regex);
-                                              
-
+                                                                                            
   if(size_2_operation){
     this->_object_file.insert(this->_object_file.begin(),"99");
     this->_object_file.insert(this->_object_file.begin(),"99");

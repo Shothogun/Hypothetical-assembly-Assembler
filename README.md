@@ -41,18 +41,18 @@ By executing this program, two files will be generated: to the directory ```/exe
 If the ```.asm``` contains errors, the assembler program will report all errors that the asm code contains.
 The report will indicate the line, line number, the type of error(lexical, syntactic and semantic) and the error details at the wrong line from the ```.asm``` file.
 
-*Note 2:*When the ```.asm``` code's instructions contains errors, the object code will be filled up with garbage code(code ```99```) to preserve the pretended size for the object code(folowing the valid instructions from the asm code).
+**Note 1:** When the ```.asm``` code's instructions contains errors, the object code will be filled up with garbage code(code ```99```) to preserve the pretended size for the object code(following the valid instructions from the asm code).
 
-**Note 1:**: The line number where an error occurred will be relative to ```.asm``` if it is 
+**Note 2:**: The line number where an error occurred will be relative to ```.asm``` if it is 
 an error in the preprocess directives and will be relative to ```.pre``` for all other errors.
 
 ## Compiling and Running the program Simulador
 
 ### Compiling Simulador
 
-To compile the assembler program, change to the directory */src_simulator/* and by terminal type:
+To compile the simulator program, change to the directory */src_simulator/* and by terminal type:
 
-> ```$ make simulator```
+> ```$ make simulador```
 
 This will generate the executable file at the directory */exec_simulator/*  called ```simulador```.
 
@@ -62,7 +62,7 @@ This will generate the executable file at the directory */exec_simulator/*  call
 
 ### Executing Simulador
 
-To execute the assembler program, change to the directory *exec_assembler* and by terminal execute:
+To execute the simulator program, change to the directory */exec_simulator/* and by terminal execute:
 
 > ```$ ./simulador <file_name.obj>```
 
