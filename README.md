@@ -66,5 +66,5 @@ To execute the simulator program, change to the directory */exec_simulator/* and
 
 > ```$ ./simulador <file_name.obj>```
 
-Substitutes ```<file_name.obj>``` by the name of the desired obj file translated to machine code that will be executed. This ```.obj``` file shall be located in the directory ```/src_assembler/obj_files/```.
+Substitutes ```<file_name.obj>``` by the name of the desired obj file translated to machine code that will be executed. This ```.obj``` file shall be located in the directory ```/exec_assembler/obj_files/```.
 By executing this program, the object file will be read through it's machine code and the machine simulator will execute its commands.
