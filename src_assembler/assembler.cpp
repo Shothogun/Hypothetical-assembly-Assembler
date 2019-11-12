@@ -491,7 +491,7 @@ void Assembler::Parser(std::string code_line ){
   //////////////////////////////////////////////
   //**   Identify COPY instruction -------------
   //////////////////////////////////////////////
-  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)$");
 
   // Seek the instruction match
   is_a_COPY_instruction = std::regex_search (code_line,
@@ -551,7 +551,7 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify STOP -------------------------
   //////////////////////////////////////////////
   
-  std::regex STOP_instruction_regex("(STOP)");
+  std::regex STOP_instruction_regex("(STOP)$");
 
   // Seek the instruction match
   is_a_STOP_instruction = std::regex_search (code_line,
