@@ -356,8 +356,7 @@ void Preprocessor::Preprocessing(){
       for (auto sub_match:matches) std::cout << sub_match << std::endl;
       */
     } // if1
-    
-    
+
     //**   IF execution      
     std::regex IF_expression_regex("(IF)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)");
 
@@ -414,6 +413,28 @@ void Preprocessor::Preprocessing(){
       for (auto sub_match:matches) std::cout << sub_match << std::endl;
       */
     } // if
+
+    // Check if an operand is an EQU label
+    // If so, substitutes for its value determined by the EQU
+    std::regex split_characters("\\s+|,");
+    regex_token_iterator<string::iterator> token_iterator(source_code_line->begin(), source_code_line->end(), split_characters, -1);
+    regex_token_iterator<string::iterator> end_line;  
+    std::map<std::string,int>::iterator equ_label;
+    std::string temp;
+
+    while (token_iterator != end_line){
+      temp = *token_iterator;
+      std::regex equ_op_label(" "+temp);
+      // Traverses the map of EQU labels
+      for(equ_label = _equ_values.begin(); equ_label!=_equ_values.end(); equ_label++){
+        // If token equals EQU label, replace with its value 
+        if(equ_label->first.compare(*token_iterator) == 0){
+          cout<<equ_label->first<<" "<<*token_iterator<<endl;
+          *source_code_line = std::regex_replace(*source_code_line, equ_op_label, " "+std::to_string(equ_label->second));
+        }
+      }
+      token_iterator++;
+    }
   } // for
 
   /* Degug
@@ -422,6 +443,7 @@ void Preprocessor::Preprocessing(){
   	std::cout << *it;
   }
   */
+    
 
   // Display all errors found
   _preprocessing_errors.display(error_log::DETAILED);
