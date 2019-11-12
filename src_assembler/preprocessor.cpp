@@ -397,8 +397,7 @@ void Preprocessor::Preprocessing(){
 
       // If label value is 0, preprocess should erase next line
       if(!label_value_IF_condition){
-        this->_preprocessed_file.erase(source_code_line);
-        source_code_line--;
+        this->_preprocessed_file.erase(source_code_line+1);
       }
 
       // Exclude IF directive line
@@ -429,7 +428,6 @@ void Preprocessor::Preprocessing(){
       for(equ_label = _equ_values.begin(); equ_label!=_equ_values.end(); equ_label++){
         // If token equals EQU label, replace with its value 
         if(equ_label->first.compare(*token_iterator) == 0){
-          cout<<equ_label->first<<" "<<*token_iterator<<endl;
           *source_code_line = std::regex_replace(*source_code_line, equ_op_label, " "+std::to_string(equ_label->second));
         }
       }
