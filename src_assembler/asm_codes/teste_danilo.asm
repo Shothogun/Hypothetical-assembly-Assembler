@@ -1,28 +1,23 @@
-	dois: EQU 2
-	tres: EQU 3
-	quatro: 
-EQU 4
-	triangulo: EQU 0
+	triangulo: EQU 1
 SECTION DATA
 	B:	SPACE				
-	H:	SPACE		dois
+	H:	SPACE		2
 	R:	SPACE 
-	DOIS:	CONST		dois
-	QUATRO: CONST		quatro
-	TRES:	CONST		tres
+	DOIS:	CONST		2
+
 
 SECTION TEXT
 		INPUT		B
 		INPUT		H
-Biscoit:	COPY Q,B,C
+Biscoit:	COPY H, R
 		IF	TRIANGULO
 		LOAD		B		
 		MULT		H		
 
-		DIV		D		t
+		DIV		DOIS		
 		STORE		R
 		OUTPUT	R
-Banana:		STOP	A
+Banana:		STOP	
 
 
 
