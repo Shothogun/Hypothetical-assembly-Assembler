@@ -1,3 +1,4 @@
+TEST: BEGIN
 	triangulo: EQU 1
 SECTION DATA
 	B:	SPACE				
@@ -18,12 +19,12 @@ SECTION TEXT
 Biscoit:	COPY H, DOIS
 		IF	TRIANGULO
 		LOAD		BISCOITO		
+		JMP		TEST
 		MULT		BATATA		
-
 		DIV		DOIS		
 		STORE		R
 		OUTPUT	R
 Banana:		STOP	
-
+END
 
 

@@ -80,8 +80,17 @@ void Assembler::Assembling(){
   // SECTION DATA code's line iterated
   std::vector<std::string>::iterator section_data_values;
 
-  //
+  // Boolean value that express SECTION
+  // detection at the code line
   bool is_SECTION = false;
+  
+  // Boolean value that express BEGIN
+  // detection at the code line
+  bool is_BEGIN = false;
+
+  // Boolean value that express END
+  // detection at the code line
+  bool is_END = false;
 
   // Boolean value that express SECTION TEXT
   // detection at the code line
@@ -100,6 +109,27 @@ void Assembler::Assembling(){
   for(preprocessed_code_line = this->_pre_file.begin();
       preprocessed_code_line < this->_pre_file.end();
       preprocessed_code_line++) { 
+
+    //////////////////////////////////
+    //**   BEGIN identifier ----------
+    ////////////////////////////////// 
+
+    std::regex BEGIN_regex("((^[a-z]|[A-Z]|_)(\\w*|\\d*)(:))*(BEGIN)(\\n)");
+    is_BEGIN = std::regex_search(*preprocessed_code_line, matches, BEGIN_regex);
+    if(is_BEGIN){
+      // Remove BEGIN in current line
+      *preprocessed_code_line = std::regex_replace (*preprocessed_code_line,BEGIN_regex,"$3");
+    }
+
+    //////////////////////////////////
+    //**   END identifier -----------
+    ////////////////////////////////// 
+
+    std::regex END_regex("(END)(\\n)");
+    is_END = std::regex_search(*preprocessed_code_line, matches, END_regex);    
+    if(is_END){
+      break;
+    }
 
     // Check if it's a section
     std::regex SECTION_regex("(SECTION)(\\s)(.*)");
