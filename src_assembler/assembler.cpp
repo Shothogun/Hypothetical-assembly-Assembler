@@ -789,7 +789,6 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
   // Value tha will be add at object code
   std::string label_value;
   int opcode = this->_instruction_table->get_opcode(instruction);
-  if(opcode == 14) cout<<"STOP"<<endl;
   int label_const_value,i;
   int space_size;
 
@@ -1645,7 +1644,7 @@ void Assembler::Error15Verify(std::string label){
       bool copy_command = std::regex_search (label_reference_line,
                       modify_const_match,copy_regex);
 
-      std::string destiny_operand = modify_const_match[8].str()+modify_const_match[9].str();
+      std::string destiny_operand = modify_const_match[3].str()+modify_const_match[4].str();
 
       // Verifies if destiny operand is the CONST label
       if(copy_command){

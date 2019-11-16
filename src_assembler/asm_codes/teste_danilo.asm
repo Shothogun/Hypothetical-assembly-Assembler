@@ -9,7 +9,7 @@ SECTION DATA
 SECTION TEXT
 		INPUT		B
 		INPUT		H
-Biscoit:	COPY H, R
+Biscoit:	COPY H, DOIS
 		IF	TRIANGULO
 		LOAD		B		
 		MULT		H		
