@@ -329,8 +329,6 @@ void Assembler::Assembling(){
   std::reverse(this->_object_file.begin(),
                this->_object_file.end()); 
 
-
-
   /*Debug
   std::vector<std::string>::iterator it;
   int i = 0;
@@ -886,6 +884,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
   if(this->_section_identifier == TEXT && opcode != ERROR){
     this->_object_file.insert(this->_object_file.begin(), 
                               to_string(opcode)); 
+  // Absolute value
+  this->_bit_map.push_back(0);                          
 
     //////////////////////////////////////////////
     //**   Labels identify -----------------------
@@ -910,6 +910,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
     
     this->_object_file.insert(this->_object_file.begin(), 
                               label_value);
+    // Relative value
+    this->_bit_map.push_back(1);                          
     this->_symbol_table->set_list_address(operand1, current_object_code_address);
 
     current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
@@ -929,7 +931,9 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
     label_value = to_string(LabelIdentifier(operand2, LABEL_OPERAND));
     this->_object_file.insert(this->_object_file.begin(), 
-                              label_value); 
+                              label_value);
+    // Relative value
+    this->_bit_map.push_back(1);                           
     this->_symbol_table->set_list_address(operand2, current_object_code_address);
 
   } //if
@@ -954,7 +958,9 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
       for(i=0; i < space_size; i++){
         this->_section_data_commands.insert(this->_section_data_commands.begin(), 
-                      "00"); 
+                      "00");
+        // Absolute value
+        this->_bit_map.push_back(0);               
       }
       break;
 
@@ -962,6 +968,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
       label_const_value = (int) std::stol (this->_instruction_operand_2, nullptr, 0);;
       this->_section_data_commands.insert(this->_section_data_commands.begin(), 
                               to_string(label_const_value)); 
+      // Absolute value
+      this->_bit_map.push_back(0);
       break;
     
     default:
@@ -989,7 +997,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
   if(opcode != ERROR){
     this->_object_file.insert(this->_object_file.begin(), 
                               to_string(opcode)); 
-
+    // Absolute value
+    this->_bit_map.push_back(0);
     //////////////////////////////////////////////
     //**   Identify label ------------------------
     //////////////////////////////////////////////
@@ -1011,6 +1020,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
     this->_object_file.insert(this->_object_file.begin(), 
                               label_value);
     this->_symbol_table->set_list_address(operand1, current_object_code_address);
+    // Relative value
+    this->_bit_map.push_back(1);
 
   }
 }
@@ -1024,8 +1035,9 @@ void Assembler::GenerateObjCode(std::string instruction) {
   int opcode = this->_instruction_table->get_opcode(instruction);
   if(opcode != ERROR){
     this->_object_file.insert(this->_object_file.begin(), 
-                              to_string(opcode)); 
-
+                              to_string(opcode));
+    // Absolute value                           
+    this->_bit_map.push_back(0);
     //////////////////////////////////////////////
     //**   Identify label ------------------------
     //////////////////////////////////////////////

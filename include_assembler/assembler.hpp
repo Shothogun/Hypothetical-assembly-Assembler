@@ -87,6 +87,9 @@ class Assembler{
     //! Definition table
     std::map<string, int> _definition_table;
 
+    //! Bit map
+    std::vector<int> _bit_map;
+
     //! _exists
     /*! 
      *  Indicates if the .asm file actually exists. If not,
