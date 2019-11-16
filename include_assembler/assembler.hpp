@@ -73,12 +73,19 @@ class Assembler{
     static const int LABEL_OPERAND = 100;
     static const int LABEL_DEFINITION = 101;
     static const int EXTERN_LABEL = 102;
+    static const int PUBLIC_LABEL = 103;
 
     //! Instruction table to object code generation
     instruction_table* _instruction_table;
 
     //! Symbol table 
     symbol_table* _symbol_table;
+
+    //! Usage table
+    std::map<string, std::vector<int>> _usage_table;
+
+    //! Definition table
+    std::map<string, int> _definition_table;
 
     //! _exists
     /*! 

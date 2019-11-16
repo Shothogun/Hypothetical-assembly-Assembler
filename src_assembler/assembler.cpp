@@ -214,6 +214,35 @@ void Assembler::Assembling(){
   }
 
         //////////////////////////////////////////////
+        //**   Update the definition table -----------
+        //////////////////////////////////////////////  
+  std::map<string, int>::iterator element;
+  /*Debug
+  std::cout<<"Definition table:"<<std::endl;
+  */
+  for(element = this->_definition_table.begin(); element != this->_definition_table.end();
+                                            element++){
+    element->second = this->_symbol_table->get_value(element->first);
+    /*Debug
+    std::cout<<"label: "<<element->first<<" value: "<<element->second<<std::endl;
+    */
+  }
+  
+  /*Debug
+  std::map<string, std::vector<int>>::iterator element2;
+  std::vector<int>::iterator element3;
+  std::cout<<"Usage table:"<<std::endl;
+  for(element2 = this->_usage_table.begin(); element2 != this->_usage_table.end(); element2++){
+    std::cout<<"label: "<<element2->first<<" positions: ";
+    for(element3 = element2->second.begin(); element3 != element2->second.end(); element3++){
+      std::cout<<*element3;
+    }
+    std::cout<<std::endl;
+  }
+  std::cout<<std::endl;
+  */
+
+        //////////////////////////////////////////////
         //**   ERROR CASE ----------------------------
         //////////////////////////////////////////////   
 
@@ -342,6 +371,8 @@ void Assembler::Parser(std::string code_line ){
 
   bool extern_label_definition = false;
 
+  bool public_label_definition = false;
+
   // Array composed by the matches found in the regex search
   std::smatch matches, matches2;
 
@@ -381,9 +412,20 @@ void Assembler::Parser(std::string code_line ){
     return;
   }
                     //////////////////////////////////////////////
+                    //**   Identify PUBLIC Label 
+                    //////////////////////////////////////////////   
+                    
+  std::regex public_label_regex("(PUBLIC)(\\s)(^[a-z]|[A-Z]|_)(\\w*|\\d*)(\\n)");
+  public_label_definition = std::regex_search (code_line, matches, public_label_regex);
+  if(public_label_definition){
+    this->_current_label = matches[3].str() + matches[4].str();
+    
+    LabelIdentifier(this->_current_label, PUBLIC_LABEL);
+    return;
+  }
+                    //////////////////////////////////////////////
                     //**   Identify Label at beginning
                     //////////////////////////////////////////////
-
   // Identifies, eliminates from the code
   // and stores its value into the symbol table
   std::regex label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(.*)");
@@ -1016,6 +1058,8 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
   // used for location of label at the object code 
   int current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
 
+  std::vector<int> usage_lines;
+  
   // Verifies symbol table contains label 
   if(this->_symbol_table->search(label) == true){
     switch (use_type)
@@ -1023,9 +1067,11 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
     case LABEL_OPERAND:
       // Verifies if it's defined
       if(this->_symbol_table->get_definition(label)){
+        if(this->_symbol_table->get_extern(label)){
+          this->_usage_table[label].push_back(current_object_code_address);
+        }
         return this->_symbol_table->get_value(label);
       }
-
       else {
         return this->_symbol_table->get_list_address(label);
       }
@@ -1106,13 +1152,18 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       this->_symbol_table->set_list_address(label, -1);
       // Set as extern
       this->_symbol_table->set_extern(label, true);
-
+      // Insert label in usage table
+      this->_usage_table.insert(pair<string, std::vector<int>>(label, usage_lines));
       // It's a address label
       if(this->_section_identifier == TEXT){
         this->_address_labels.insert(_address_labels.begin(),label);
       }
 
       this->Error15Verify(label);      
+      break;
+    case PUBLIC_LABEL:
+      this->_definition_table.insert(pair<string, int>(label, NULL));
+      
     default:
       break;
     }// switch
