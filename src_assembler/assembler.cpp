@@ -1215,8 +1215,12 @@ void Assembler::ResolveLabelValue(std::string label){
     //////////////////////////////////////////////      
 
   // Check JMP for SECTION DATA
-  if(label_value >= this->_object_file.size()){
+  if(label_value > this->_object_file.size()){
     vector<label_occurrence>::iterator itr;
+    /*Debug
+    cout<<"Aqui!"<<endl;    cout<<label<<endl;
+    cout<<this->_object_file.size()<<endl; cout<<this->_section_data_commands.size()<<endl;
+    */
     // Cycles through the vector of labels used by the JMP instructions
     for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
       // Notifies an error if JMP goes to SECTION DATA
