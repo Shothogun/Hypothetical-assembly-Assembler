@@ -491,7 +491,7 @@ void Assembler::Parser(std::string code_line ){
   //////////////////////////////////////////////
   //**   Identify COPY instruction -------------
   //////////////////////////////////////////////
-  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)");
+  std::regex COPY_instruction_regex("(COPY)(\\s)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(,)([a-z]|[A-Z]|_)(\\w*|\\d*)(\\+*)(\\d*)(\\n*)$");
 
   // Seek the instruction match
   is_a_COPY_instruction = std::regex_search (code_line,
@@ -551,7 +551,7 @@ void Assembler::Parser(std::string code_line ){
   //**   Identify STOP -------------------------
   //////////////////////////////////////////////
   
-  std::regex STOP_instruction_regex("(STOP)");
+  std::regex STOP_instruction_regex("(STOP)(\\n*)$");
 
   // Seek the instruction match
   is_a_STOP_instruction = std::regex_search (code_line,
@@ -560,9 +560,8 @@ void Assembler::Parser(std::string code_line ){
   if(is_a_STOP_instruction){
     // Matches pattern at instruction STOP:
     // 0: Instruction STOP match
-
-    this->_instruction_operator = matches[0].str();
-
+    this->_instruction_operator = matches[1].str();
+    
     // Indicates the line's command kind
     this->_line_type_identifier = STOP_TYPE;
 
@@ -790,6 +789,7 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
   // Value tha will be add at object code
   std::string label_value;
   int opcode = this->_instruction_table->get_opcode(instruction);
+  if(opcode == 14) cout<<"STOP"<<endl;
   int label_const_value,i;
   int space_size;
 
