@@ -802,10 +802,10 @@ void Assembler::Parser(std::string code_line ){
      is_a_CONST_directive == false)
      && this->_section_identifier == DATA)
   {     
-    // Debug
+    /* Debug
       std::cout << this->_current_line_string << endl;  
       std::cout << this->_current_line_number << endl;                                          
-    //
+    */
     this->Error4Verify(code_line);
     this->Error8Verify(code_line);
     this->Error14Verify(code_line);
@@ -1184,12 +1184,7 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       this->_symbol_table->set_extern(label, true);
       // Insert label in usage table
       this->_usage_table.insert(pair<string, std::vector<int>>(label, usage_lines));
-      // It's a address label
-      if(this->_section_identifier == TEXT){
-        this->_address_labels.insert(_address_labels.begin(),label);
-      }
-
-      this->Error15Verify(label);      
+      
       break;
     case PUBLIC_LABEL:
       this->_definition_table.insert(pair<string, int>(label, NULL));
@@ -1217,10 +1212,6 @@ void Assembler::ResolveLabelValue(std::string label){
   // Check JMP for SECTION DATA
   if(label_value > this->_object_file.size()){
     vector<label_occurrence>::iterator itr;
-    /*Debug
-    cout<<"Aqui!"<<endl;    cout<<label<<endl;
-    cout<<this->_object_file.size()<<endl; cout<<this->_section_data_commands.size()<<endl;
-    */
     // Cycles through the vector of labels used by the JMP instructions
     for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
       // Notifies an error if JMP goes to SECTION DATA
