@@ -340,6 +340,8 @@ void Assembler::Parser(std::string code_line ){
 
   bool two_label_definition = false;
 
+  bool extern_label_definition = false;
+
   // Array composed by the matches found in the regex search
   std::smatch matches, matches2;
 
@@ -367,6 +369,17 @@ void Assembler::Parser(std::string code_line ){
 
   Scanner();
 
+                    //////////////////////////////////////////////
+                    //**   Identify EXTERN Label 
+                    //////////////////////////////////////////////                    
+
+  std::regex extern_label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(EXTERN)");
+  extern_label_definition = std::regex_search (code_line, matches, extern_label_regex);
+  if(extern_label_definition){
+    this->_current_label = matches[1].str() + matches[2].str();
+    LabelIdentifier(this->_current_label, EXTERN_LABEL);
+    return;
+  }
                     //////////////////////////////////////////////
                     //**   Identify Label at beginning
                     //////////////////////////////////////////////
@@ -1084,6 +1097,22 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       this->Error15Verify(label);
 
       break;
+    case EXTERN_LABEL:
+      // Label's addres
+      this->_symbol_table->set_value(label, 0);
+      // Set as defined
+      this->_symbol_table->set_definition(label, true);
+      // Symbol location reference at code
+      this->_symbol_table->set_list_address(label, -1);
+      // Set as extern
+      this->_symbol_table->set_extern(label, true);
+
+      // It's a address label
+      if(this->_section_identifier == TEXT){
+        this->_address_labels.insert(_address_labels.begin(),label);
+      }
+
+      this->Error15Verify(label);      
     default:
       break;
     }// switch

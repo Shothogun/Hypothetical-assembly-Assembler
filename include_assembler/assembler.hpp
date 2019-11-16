@@ -72,6 +72,7 @@ class Assembler{
     //! Label use context
     static const int LABEL_OPERAND = 100;
     static const int LABEL_DEFINITION = 101;
+    static const int EXTERN_LABEL = 102;
 
     //! Instruction table to object code generation
     instruction_table* _instruction_table;
