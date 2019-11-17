@@ -30,6 +30,11 @@ int main(int argc,char* argv[]) {
   // Creates the Assembler instance, ready to compile the .pre file
   Assembler* assembler = new Assembler(source_code_file_name);
 
+  // If two source code, this is a module
+  if(argc == 3){
+    assembler->_is_MODULE = true;
+  }
+
   assembler->Assembling();
 
   assembler->MakeObjectFile(source_code_file_name);
@@ -39,6 +44,7 @@ int main(int argc,char* argv[]) {
   delete preprocessed_file;
   delete assembler;
   
+  // If two source code, mounts the second file
   if(argc == 3){
     char* second_source_code_file_name = argv[2];
     // Creates the Preprocessed file instance, not preprocessed yet
@@ -52,6 +58,8 @@ int main(int argc,char* argv[]) {
 
     // Creates the Assembler instance, ready to compile the .pre file
     Assembler* second_assembler = new Assembler(second_source_code_file_name);
+
+    second_assembler->_is_MODULE = true;
 
     second_assembler->Assembling();
 

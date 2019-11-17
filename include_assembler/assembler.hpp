@@ -16,6 +16,13 @@
  */
 class Assembler{
   public:
+
+    //! _is_MODULE
+    /*!
+     * Indicates whether the current file is a module of a program.
+    */
+    bool _is_MODULE = false;
+
     //! Assembler(std::string source_code_name);
     /*! 
      * Produces the vector(_object_file) containing each line from
@@ -89,7 +96,6 @@ class Assembler{
 
     //! Bit map
     std::vector<int> _bit_map;
-
     //! _exists
     /*! 
      *  Indicates if the .asm file actually exists. If not,

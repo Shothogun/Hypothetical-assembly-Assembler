@@ -256,6 +256,7 @@ void Assembler::Assembling(){
     /*Debug
     std::cout<<"label: "<<element->first<<" value: "<<element->second<<std::endl;
     */
+    
   }
   /*Debug
   std::map<string, std::vector<int>>::iterator element2;
@@ -441,12 +442,10 @@ void Assembler::Parser(std::string code_line ){
                     //////////////////////////////////////////////
                     //**   Identify PUBLIC Label 
                     //////////////////////////////////////////////   
-                    
   std::regex public_label_regex("(PUBLIC)(\\s)(^[a-z]|[A-Z]|_)(\\w*|\\d*)(\\n)");
   public_label_definition = std::regex_search (code_line, matches, public_label_regex);
   if(public_label_definition){
     this->_current_label = matches[3].str() + matches[4].str();
-    
     LabelIdentifier(this->_current_label, PUBLIC_LABEL);
     return;
   }
@@ -1084,7 +1083,7 @@ void Assembler::MakeObjectFile(char* source_code_name){
 
   // Headear informations in .obj file
   fprintf (pre_file, "H: %s\n", prog_name.c_str());
-  fprintf (pre_file, "H: %d\n", this->_object_file.size());
+  fprintf (pre_file, "H: %d\n", (int)this->_object_file.size());
   fprintf (pre_file, "H: ");
 
   for(auto bit : this->_bit_map){
@@ -1102,8 +1101,31 @@ void Assembler::MakeObjectFile(char* source_code_name){
     
     fprintf (pre_file, "%s ", object_file_line->c_str() );
   }
-  fclose(pre_file);
+  fprintf (pre_file, "\n");  
 
+  if(this->_is_MODULE){
+    // Definition table
+    fprintf (pre_file, "DEFINITION TABLE:\n");
+    fprintf (pre_file, "VALUE     SYMBOL\n");
+    std::map<std::string, int>::iterator definition_table_line;
+    for(definition_table_line = this->_definition_table.begin(); definition_table_line != this->_definition_table.end(); definition_table_line++){
+      fprintf (pre_file, "%08d  ", definition_table_line->second);
+      fprintf (pre_file, "%s\n", definition_table_line->first.c_str());
+    }
+
+    // Usage table
+    fprintf (pre_file, "USAGE TABLE:\n");
+    fprintf (pre_file, "ADDRESS   SYMBOL\n");
+    std::map<std::string, std::vector<int>>::iterator usage_table_line;
+    std::vector<int>::iterator usage_table_col;
+    for(usage_table_line = this->_usage_table.begin(); usage_table_line != this->_usage_table.end(); usage_table_line++){
+      for(usage_table_col = usage_table_line->second.begin(); usage_table_col != usage_table_line->second.end(); usage_table_col++){
+        fprintf (pre_file, "%08d  ", *usage_table_col);
+        fprintf (pre_file, "%s\n", usage_table_line->first.c_str());
+      }  
+    }
+  }
+  fclose(pre_file);
 }
 
 
@@ -1156,6 +1178,9 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       }
 
       this->Error15Verify(label);
+      break;
+    case PUBLIC_LABEL:
+      this->_definition_table.insert(pair<string, int>(label, NULL));
       break;
     default:
       break;
