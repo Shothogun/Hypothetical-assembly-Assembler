@@ -257,7 +257,6 @@ void Assembler::Assembling(){
     std::cout<<"label: "<<element->first<<" value: "<<element->second<<std::endl;
     */
   }
-  
   /*Debug
   std::map<string, std::vector<int>>::iterator element2;
   std::vector<int>::iterator element3;
@@ -1070,8 +1069,11 @@ void Assembler::MakeObjectFile(char* source_code_name){
   std::regex name_regex("(.*)(.asm)");  
 
   // Replace .pre extention for .obj
-   string_source_code_name = std::regex_replace (string_source_code_name,name_regex,"$1.obj");
+  string_source_code_name = std::regex_replace (string_source_code_name,name_regex,"$1.obj");
 
+  // Gets the file name without extention
+  std::string prog_name = std::regex_replace(source_code_name,name_regex,"$1");
+  
   // Convert source_code_name string variable to char type
   char char_source_code_name[string_source_code_name.size() + 1];
   strcpy(char_source_code_name, string_source_code_name.c_str());
@@ -1079,6 +1081,20 @@ void Assembler::MakeObjectFile(char* source_code_name){
   // Produce the .obj file with the _object_file vector
   FILE* pre_file = fopen(char_source_code_name, "w+");
   if (pre_file == NULL) perror ("Error opening file");
+
+  // Headear informations in .obj file
+  fprintf (pre_file, "H: %s\n", prog_name.c_str());
+  fprintf (pre_file, "H: %d\n", this->_object_file.size());
+  fprintf (pre_file, "H: ");
+
+  for(auto bit : this->_bit_map){
+    fprintf(pre_file, "%d", bit);
+  }
+
+  fprintf (pre_file, "\n");
+
+  // Code
+  fprintf(pre_file, "T: ");
   std::vector<std::string>::iterator object_file_line;
   for(object_file_line = this->_object_file.begin();
       object_file_line < this->_object_file.end();
