@@ -45,7 +45,7 @@ class Linker{
      *
      *
     */
-    void MakeObjectFile();      
+    void MakeObjectFile(char* linked_file_name);      
 
   private:
     //!
@@ -71,7 +71,7 @@ class Linker{
      *
      *
     */
-    bool is_two_Module = false;
+    bool is_two_Modules = false;
     //!
     /*
      *
@@ -85,6 +85,13 @@ class Linker{
      *
     */
     std::map<int, std::string> _global_usage_table;
+
+    //!
+    /*
+     *
+     * 
+    */
+    std::vector<int> _linked_object_code;
 
     //!
     /*
