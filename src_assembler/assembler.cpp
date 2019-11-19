@@ -258,7 +258,8 @@ void Assembler::Assembling(){
     */
     
   }
-  /*Debug
+
+  /* Debug
   std::map<string, std::vector<int>>::iterator element2;
   std::vector<int>::iterator element3;
   std::cout<<"Usage table:"<<std::endl;
