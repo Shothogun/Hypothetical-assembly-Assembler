@@ -110,6 +110,17 @@ bool symbol_table::get_definition(string identifier){
   }
 }
 
+bool symbol_table::get_extern(string identifier){
+  // Check if symbol is in table
+  itr = this->table.find(identifier);
+  if(itr != this->table.end()){
+    return (bool)table[identifier][EXTERN];
+  }
+  else{
+    return false;
+  }
+}
+
 int symbol_table::get_list_address(string identifier){
   // Check if symbol is in table
   itr = this->table.find(identifier);

@@ -71,26 +71,26 @@ void fetch_execute_cycle(){
       break;
 
     case JMP:
-      PC = mem[OP1];
+      PC = OP1;
       break;
 
     case JMPN:
       if(ACC<0)
-        PC = mem[OP1];
+        PC = OP1;
       else
         PC += 2;
       break;
 
     case JMPP:
       if(ACC>0)
-        PC = mem[OP1];
+        PC = OP1;
       else
         PC += 2;      
       break;
 
     case JMPZ:
       if(ACC==0)
-        PC = mem[OP1];
+        PC = OP1;
       else
         PC += 2;
       break;

@@ -80,8 +80,17 @@ void Assembler::Assembling(){
   // SECTION DATA code's line iterated
   std::vector<std::string>::iterator section_data_values;
 
-  //
+  // Boolean value that express SECTION
+  // detection at the code line
   bool is_SECTION = false;
+  
+  // Boolean value that express BEGIN
+  // detection at the code line
+  bool is_BEGIN = false;
+
+  // Boolean value that express END
+  // detection at the code line
+  bool is_END = false;
 
   // Boolean value that express SECTION TEXT
   // detection at the code line
@@ -100,6 +109,27 @@ void Assembler::Assembling(){
   for(preprocessed_code_line = this->_pre_file.begin();
       preprocessed_code_line < this->_pre_file.end();
       preprocessed_code_line++) { 
+
+    //////////////////////////////////
+    //**   BEGIN identifier ----------
+    ////////////////////////////////// 
+
+    std::regex BEGIN_regex("((^[a-z]|[A-Z]|_)(\\w*|\\d*)(:))*(BEGIN)(\\n)");
+    is_BEGIN = std::regex_search(*preprocessed_code_line, matches, BEGIN_regex);
+    if(is_BEGIN){
+      // Remove BEGIN in current line
+      *preprocessed_code_line = std::regex_replace (*preprocessed_code_line,BEGIN_regex,"$3");
+    }
+
+    //////////////////////////////////
+    //**   END identifier -----------
+    ////////////////////////////////// 
+
+    std::regex END_regex("(END)(\\n)");
+    is_END = std::regex_search(*preprocessed_code_line, matches, END_regex);    
+    if(is_END){
+      break;
+    }
 
     // Check if it's a section
     std::regex SECTION_regex("(SECTION)(\\s)(.*)");
@@ -214,6 +244,36 @@ void Assembler::Assembling(){
   }
 
         //////////////////////////////////////////////
+        //**   Update the definition table -----------
+        //////////////////////////////////////////////  
+  std::map<string, int>::iterator element;
+  /*Debug
+  std::cout<<"Definition table:"<<std::endl;
+  */
+  for(element = this->_definition_table.begin(); element != this->_definition_table.end();
+                                            element++){
+    element->second = this->_symbol_table->get_value(element->first);
+    /*Debug
+    std::cout<<"label: "<<element->first<<" value: "<<element->second<<std::endl;
+    */
+    
+  }
+
+  /* Debug
+  std::map<string, std::vector<int>>::iterator element2;
+  std::vector<int>::iterator element3;
+  std::cout<<"Usage table:"<<std::endl;
+  for(element2 = this->_usage_table.begin(); element2 != this->_usage_table.end(); element2++){
+    std::cout<<"label: "<<element2->first<<" positions: ";
+    for(element3 = element2->second.begin(); element3 != element2->second.end(); element3++){
+      std::cout<<*element3;
+    }
+    std::cout<<std::endl;
+  }
+  std::cout<<std::endl;
+  */
+
+        //////////////////////////////////////////////
         //**   ERROR CASE ----------------------------
         //////////////////////////////////////////////   
 
@@ -269,8 +329,6 @@ void Assembler::Assembling(){
   // Corrects the object code lines order(C++ vectores is inserted in the reversed order)
   std::reverse(this->_object_file.begin(),
                this->_object_file.end()); 
-
-
 
   /*Debug
   std::vector<std::string>::iterator it;
@@ -340,6 +398,10 @@ void Assembler::Parser(std::string code_line ){
 
   bool two_label_definition = false;
 
+  bool extern_label_definition = false;
+
+  bool public_label_definition = false;
+
   // Array composed by the matches found in the regex search
   std::smatch matches, matches2;
 
@@ -368,9 +430,29 @@ void Assembler::Parser(std::string code_line ){
   Scanner();
 
                     //////////////////////////////////////////////
+                    //**   Identify EXTERN Label 
+                    //////////////////////////////////////////////                    
+
+  std::regex extern_label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(EXTERN)");
+  extern_label_definition = std::regex_search (code_line, matches, extern_label_regex);
+  if(extern_label_definition){
+    this->_current_label = matches[1].str() + matches[2].str();
+    LabelIdentifier(this->_current_label, EXTERN_LABEL);
+    return;
+  }
+                    //////////////////////////////////////////////
+                    //**   Identify PUBLIC Label 
+                    //////////////////////////////////////////////   
+  std::regex public_label_regex("(PUBLIC)(\\s)(^[a-z]|[A-Z]|_)(\\w*|\\d*)(\\n)");
+  public_label_definition = std::regex_search (code_line, matches, public_label_regex);
+  if(public_label_definition){
+    this->_current_label = matches[3].str() + matches[4].str();
+    LabelIdentifier(this->_current_label, PUBLIC_LABEL);
+    return;
+  }
+                    //////////////////////////////////////////////
                     //**   Identify Label at beginning
                     //////////////////////////////////////////////
-
   // Identifies, eliminates from the code
   // and stores its value into the symbol table
   std::regex label_regex("(^[a-z]|[A-Z]|_)(\\w*|\\d*)(:)(\\s)(.*)");
@@ -717,10 +799,10 @@ void Assembler::Parser(std::string code_line ){
      is_a_CONST_directive == false)
      && this->_section_identifier == DATA)
   {     
-    // Debug
+    /* Debug
       std::cout << this->_current_line_string << endl;  
       std::cout << this->_current_line_number << endl;                                          
-    //
+    */
     this->Error4Verify(code_line);
     this->Error8Verify(code_line);
     this->Error14Verify(code_line);
@@ -789,7 +871,6 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
   // Value tha will be add at object code
   std::string label_value;
   int opcode = this->_instruction_table->get_opcode(instruction);
-  if(opcode == 14) cout<<"STOP"<<endl;
   int label_const_value,i;
   int space_size;
 
@@ -802,6 +883,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
   if(this->_section_identifier == TEXT && opcode != ERROR){
     this->_object_file.insert(this->_object_file.begin(), 
                               to_string(opcode)); 
+  // Absolute value
+  this->_bit_map.push_back(0);                          
 
     //////////////////////////////////////////////
     //**   Labels identify -----------------------
@@ -826,6 +909,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
     
     this->_object_file.insert(this->_object_file.begin(), 
                               label_value);
+    // Relative value
+    this->_bit_map.push_back(1);                          
     this->_symbol_table->set_list_address(operand1, current_object_code_address);
 
     current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
@@ -845,7 +930,9 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
     label_value = to_string(LabelIdentifier(operand2, LABEL_OPERAND));
     this->_object_file.insert(this->_object_file.begin(), 
-                              label_value); 
+                              label_value);
+    // Relative value
+    this->_bit_map.push_back(1);                           
     this->_symbol_table->set_list_address(operand2, current_object_code_address);
 
   } //if
@@ -870,7 +957,9 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
 
       for(i=0; i < space_size; i++){
         this->_section_data_commands.insert(this->_section_data_commands.begin(), 
-                      "00"); 
+                      "00");
+        // Absolute value
+        this->_bit_map.push_back(0);               
       }
       break;
 
@@ -878,6 +967,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1,
       label_const_value = (int) std::stol (this->_instruction_operand_2, nullptr, 0);;
       this->_section_data_commands.insert(this->_section_data_commands.begin(), 
                               to_string(label_const_value)); 
+      // Absolute value
+      this->_bit_map.push_back(0);
       break;
     
     default:
@@ -905,7 +996,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
   if(opcode != ERROR){
     this->_object_file.insert(this->_object_file.begin(), 
                               to_string(opcode)); 
-
+    // Absolute value
+    this->_bit_map.push_back(0);
     //////////////////////////////////////////////
     //**   Identify label ------------------------
     //////////////////////////////////////////////
@@ -927,6 +1019,8 @@ void Assembler::GenerateObjCode(std::string instruction, std::string operand1) {
     this->_object_file.insert(this->_object_file.begin(), 
                               label_value);
     this->_symbol_table->set_list_address(operand1, current_object_code_address);
+    // Relative value
+    this->_bit_map.push_back(1);
 
   }
 }
@@ -940,8 +1034,9 @@ void Assembler::GenerateObjCode(std::string instruction) {
   int opcode = this->_instruction_table->get_opcode(instruction);
   if(opcode != ERROR){
     this->_object_file.insert(this->_object_file.begin(), 
-                              to_string(opcode)); 
-
+                              to_string(opcode));
+    // Absolute value                           
+    this->_bit_map.push_back(0);
     //////////////////////////////////////////////
     //**   Identify label ------------------------
     //////////////////////////////////////////////
@@ -974,24 +1069,68 @@ void Assembler::MakeObjectFile(char* source_code_name){
   std::regex name_regex("(.*)(.asm)");  
 
   // Replace .pre extention for .obj
-   string_source_code_name = std::regex_replace (string_source_code_name,name_regex,"$1.obj");
+  string_source_code_name = std::regex_replace (string_source_code_name,name_regex,"$1.obj");
 
+  // Gets the file name without extention
+  std::string prog_name = std::regex_replace(source_code_name,name_regex,"$1");
+  
   // Convert source_code_name string variable to char type
   char char_source_code_name[string_source_code_name.size() + 1];
   strcpy(char_source_code_name, string_source_code_name.c_str());
 
   // Produce the .obj file with the _object_file vector
-  FILE* pre_file = fopen(char_source_code_name, "w+");
-  if (pre_file == NULL) perror ("Error opening file");
+  FILE* obj_file = fopen(char_source_code_name, "w+");
+  if (obj_file == NULL) perror ("Error opening file");
+
+  // Headear informations in .obj file
+  fprintf (obj_file, "H: %s\n", prog_name.c_str());
+  fprintf (obj_file, "H: %d\n", (int)this->_object_file.size());
+  fprintf (obj_file, "H: ");
+
+  for(auto bit : this->_bit_map){
+    fprintf(obj_file, "%d", bit);
+  }
+
+  fprintf (obj_file, "\n");
+
+  // Code
+  fprintf(obj_file, "T: ");
   std::vector<std::string>::iterator object_file_line;
   for(object_file_line = this->_object_file.begin();
       object_file_line < this->_object_file.end();
       object_file_line++) {
     
-    fprintf (pre_file, "%s ", object_file_line->c_str() );
+    fprintf (obj_file, "%s ", object_file_line->c_str() );
   }
-  fclose(pre_file);
+  fprintf (obj_file, "\n");  
 
+  if(this->_is_MODULE){
+    // Definition table
+    if(this->_definition_table.size() > 0){
+      fprintf (obj_file, "DEFINITION TABLE:\n");
+      fprintf (obj_file, "VALUE     SYMBOL\n");
+    }
+    std::map<std::string, int>::iterator definition_table_line;
+    for(definition_table_line = this->_definition_table.begin(); definition_table_line != this->_definition_table.end(); definition_table_line++){
+      fprintf (obj_file, "%08d  ", definition_table_line->second);
+      fprintf (obj_file, "%s\n", definition_table_line->first.c_str());
+    }
+
+    // Usage table
+    if(this->_usage_table.size() > 0){
+      fprintf (obj_file, "USAGE TABLE:\n");
+      fprintf (obj_file, "ADDRESS   SYMBOL\n");
+    }
+    std::map<std::string, std::vector<int>>::iterator usage_table_line;
+    std::vector<int>::iterator usage_table_col;
+    for(usage_table_line = this->_usage_table.begin(); usage_table_line != this->_usage_table.end(); usage_table_line++){
+      for(usage_table_col = usage_table_line->second.begin(); usage_table_col != usage_table_line->second.end(); usage_table_col++){
+        fprintf (obj_file, "%08d  ", *usage_table_col);
+        fprintf (obj_file, "%s\n", usage_table_line->first.c_str());
+      }  
+    }
+  }
+  fclose(obj_file);
 }
 
 
@@ -1004,6 +1143,8 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
   // used for location of label at the object code 
   int current_object_code_address = this->_object_file.size() + this->_section_data_commands.size();
 
+  std::vector<int> usage_lines;
+  
   // Verifies symbol table contains label 
   if(this->_symbol_table->search(label) == true){
     switch (use_type)
@@ -1011,9 +1152,11 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
     case LABEL_OPERAND:
       // Verifies if it's defined
       if(this->_symbol_table->get_definition(label)){
+        if(this->_symbol_table->get_extern(label)){
+          this->_usage_table[label].push_back(current_object_code_address);
+        }
         return this->_symbol_table->get_value(label);
       }
-
       else {
         return this->_symbol_table->get_list_address(label);
       }
@@ -1040,6 +1183,9 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       }
 
       this->Error15Verify(label);
+      break;
+    case PUBLIC_LABEL:
+      this->_definition_table.insert(pair<string, int>(label, NULL));
       break;
     default:
       break;
@@ -1085,6 +1231,22 @@ int Assembler::LabelIdentifier(std::string label, int use_type) {
       this->Error15Verify(label);
 
       break;
+    case EXTERN_LABEL:
+      // Label's addres
+      this->_symbol_table->set_value(label, 0);
+      // Set as defined
+      this->_symbol_table->set_definition(label, true);
+      // Symbol location reference at code
+      this->_symbol_table->set_list_address(label, -1);
+      // Set as extern
+      this->_symbol_table->set_extern(label, true);
+      // Insert label in usage table
+      this->_usage_table.insert(pair<string, std::vector<int>>(label, usage_lines));
+      
+      break;
+    case PUBLIC_LABEL:
+      this->_definition_table.insert(pair<string, int>(label, NULL));
+      
     default:
       break;
     }// switch
@@ -1106,7 +1268,7 @@ void Assembler::ResolveLabelValue(std::string label){
     //////////////////////////////////////////////      
 
   // Check JMP for SECTION DATA
-  if(label_value >= this->_object_file.size()){
+  if(label_value > this->_object_file.size()){
     vector<label_occurrence>::iterator itr;
     // Cycles through the vector of labels used by the JMP instructions
     for(itr = this->_label_occurrences.begin(); itr!=this->_label_occurrences.end(); itr++){
@@ -1645,7 +1807,7 @@ void Assembler::Error15Verify(std::string label){
       bool copy_command = std::regex_search (label_reference_line,
                       modify_const_match,copy_regex);
 
-      std::string destiny_operand = modify_const_match[8].str()+modify_const_match[9].str();
+      std::string destiny_operand = modify_const_match[3].str()+modify_const_match[4].str();
 
       // Verifies if destiny operand is the CONST label
       if(copy_command){
