@@ -1807,7 +1807,7 @@ void Assembler::Error15Verify(std::string label){
       bool copy_command = std::regex_search (label_reference_line,
                       modify_const_match,copy_regex);
 
-      std::string destiny_operand = modify_const_match[3].str()+modify_const_match[4].str();
+      std::string destiny_operand = modify_const_match[8].str()+modify_const_match[9].str();
 
       // Verifies if destiny operand is the CONST label
       if(copy_command){
