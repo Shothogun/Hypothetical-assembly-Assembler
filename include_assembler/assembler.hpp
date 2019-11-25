@@ -51,6 +51,15 @@ class Assembler{
      */
     void MakeObjectFile(char* source_code_name);
 
+
+    //! LinkOffsetLabels();
+    /*
+     *  If a module file is a input, every extern label
+     *  at output object file  will contain the associated
+     *  offset value.
+     */
+    void LinkOffsetLabels();
+
     //! Error log
     error_log* _assembling_errors;
 

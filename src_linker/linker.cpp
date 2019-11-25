@@ -120,6 +120,9 @@ void Linker::ConcatenatesObjectCodes(){
   this->_linked_object_code = this->_module_A->get_object_code();
   std::vector<int>::iterator code;
 
+
+  this->_module_B_start_point = this->_linked_object_code.size();
+
   // Inser object code of second module in linked object code with correction factor
   // in relative values
   std::vector<int> object_code_B = this->_module_B->get_object_code();
@@ -140,6 +143,17 @@ void Linker::ResolveReferences(){
   std::map<int, std::string>::iterator usage_table_line;
   for(usage_table_line = this->_global_usage_table.begin(); usage_table_line != this->_global_usage_table.end();
   usage_table_line++){
-    this->_linked_object_code[usage_table_line->first] = this->_global_definition_table[usage_table_line->second];
+    // Just sums up the offset with the label value
+    if(usage_table_line->first < this->_module_B_start_point){
+      this->_linked_object_code[usage_table_line->first] = this->_global_definition_table[usage_table_line->second] + 
+                                                           this->_linked_object_code[usage_table_line->first];
+    }
+    // Sum offset with the label value, and excludes correction factor
+    // that occurs at Module B
+    else {
+      this->_linked_object_code[usage_table_line->first] = this->_global_definition_table[usage_table_line->second] + 
+                                                           this->_linked_object_code[usage_table_line->first]- 
+                                                           this->_correction_factor;
+    }                                                        
   }
 }

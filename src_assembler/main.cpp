@@ -34,16 +34,9 @@ int main(int argc,char* argv[]) {
   if(argc == 3){
     assembler->_is_MODULE = true;
   }
-
+  
   assembler->Assembling();
 
-  assembler->MakeObjectFile(source_code_file_name);
-
-  assembler->_assembling_errors->display(1);
-
-  delete preprocessed_file;
-  delete assembler;
-  
   // If two source code, mounts the second file
   if(argc == 3){
     char* second_source_code_file_name = argv[2];
@@ -64,12 +57,23 @@ int main(int argc,char* argv[]) {
     second_assembler->Assembling();
 
     second_assembler->MakeObjectFile(second_source_code_file_name);
+
+    // Set offset values at extern labels
+    assembler->LinkOffsetLabels();
+    second_assembler->LinkOffsetLabels();
     
     second_assembler->_assembling_errors->display(1);
 
     delete second_preprocessed_file;
     delete second_assembler;
   }
+
+  assembler->MakeObjectFile(source_code_file_name);
+
+  assembler->_assembling_errors->display(1);
+
+  delete preprocessed_file;
+  delete assembler;
 
   return 0;
 }

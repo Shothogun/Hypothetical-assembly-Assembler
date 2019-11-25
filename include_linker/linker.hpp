@@ -79,6 +79,14 @@ class Linker{
     */
     bool is_two_Modules = false;
 
+    //! _module_B_start_point
+    /*
+     * Indicates Linked object code beginning
+     * address
+     *
+    */
+    int _module_B_start_point;
+
     //! _global_definition_table
     /*
      * Store all definition information from the provided modules.

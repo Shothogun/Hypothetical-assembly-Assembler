@@ -326,7 +326,7 @@ void Assembler::Assembling(){
                               *section_data_values); 
   }
  
-  // Corrects the object code lines order(C++ vectores is inserted in the reversed order)
+  // Corrects the object code lines order(C++ vectors is inserted in the reversed order)
   std::reverse(this->_object_file.begin(),
                this->_object_file.end()); 
 
@@ -1425,6 +1425,37 @@ int Assembler::AllocSizeManager(){
   else{
     alloc_size_number = 1;
     return alloc_size_number;
+  }
+}
+
+void Assembler::LinkOffsetLabels(){
+  std::map<int, int[2]>::iterator extern_label;
+
+  // Object code address where occurs
+  // the offset labels calls
+  int obj_code_address;
+
+  // Offset value written at object code's
+  // extern labels locations
+  int offset;
+
+  // Value stored at the object code file
+  std::string obj_code;
+
+  for(extern_label = this->_address_offset.begin(); 
+      extern_label != this->_address_offset.end();
+      ++extern_label)
+  {
+    obj_code_address = extern_label->first;
+    offset = extern_label->second[OFFSET];
+    obj_code = this->_object_file[obj_code_address];
+
+    // Verifies if the offset case is a 
+    // extern label use
+    if(obj_code.compare("0") == 0){
+      // Writes offset value if extern labels uses it
+      this->_object_file[obj_code_address] = to_string(offset);
+    }
   }
 }
 
