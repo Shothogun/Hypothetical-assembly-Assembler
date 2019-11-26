@@ -10,7 +10,7 @@ int main(int argc,char* argv[]) {
 
   // Obj files are locates in the directory /src_simulator/obj_files/
   // outside current /exec_simulator/ directory(where the program is executed)
-  string string_source_code_name = "../exec_assembler/obj_files/";
+  string string_source_code_name = "../exec_linker/linked_files/";
 
   // Source code name input at the terminal execution
   // concatenated with directory

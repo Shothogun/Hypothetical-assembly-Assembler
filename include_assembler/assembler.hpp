@@ -16,6 +16,13 @@
  */
 class Assembler{
   public:
+
+    //! _is_MODULE
+    /*!
+     * Indicates whether the current file is a module of a program.
+    */
+    bool _is_MODULE = false;
+
     //! Assembler(std::string source_code_name);
     /*! 
      * Produces the vector(_object_file) containing each line from
@@ -43,6 +50,15 @@ class Assembler{
      * variable
      */
     void MakeObjectFile(char* source_code_name);
+
+
+    //! LinkOffsetLabels();
+    /*
+     *  If a module file is a input, every extern label
+     *  at output object file  will contain the associated
+     *  offset value.
+     */
+    void LinkOffsetLabels();
 
     //! Error log
     error_log* _assembling_errors;
@@ -72,6 +88,8 @@ class Assembler{
     //! Label use context
     static const int LABEL_OPERAND = 100;
     static const int LABEL_DEFINITION = 101;
+    static const int EXTERN_LABEL = 102;
+    static const int PUBLIC_LABEL = 103;
 
     //! Instruction table to object code generation
     instruction_table* _instruction_table;
@@ -79,6 +97,14 @@ class Assembler{
     //! Symbol table 
     symbol_table* _symbol_table;
 
+    //! Usage table
+    std::map<string, std::vector<int>> _usage_table;
+
+    //! Definition table
+    std::map<string, int> _definition_table;
+
+    //! Bit map
+    std::vector<int> _bit_map;
     //! _exists
     /*! 
      *  Indicates if the .asm file actually exists. If not,
