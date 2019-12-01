@@ -49,7 +49,7 @@ The report will indicate the line, line number, the type of error(lexical, synta
 
 **Note 1:** If two files are provided, each module must contain the BEGIN and END directives.
 
-**Note 2:** When the ```.asm``` code's instructions contains errors, the object code will be filled up with garbage code(code ```99```) to preserve the pretended size for the object code(following the valid instructions from the asm code).
+**Note 2:** When the ```.asm``` code's instructions contains errors, the object code will be filled up with garbage code(code ```99```) to preserve the inteded size for the object code(following the valid instructions from the asm code).
 
 **Note 3:**: The line number where an error occurred will be relative to ```.asm``` if it is 
 an error in the preprocess directives and will be relative to ```.pre``` for all other errors.

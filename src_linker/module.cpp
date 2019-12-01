@@ -78,7 +78,6 @@ void Module::ReadObjectFile(std::string object_file_name){
   }
   /*Debug
 
-  */
   std::cout<<"name: "<<this->_module_name<<std::endl;
   std::cout<<"size: "<<this->_module_size<<std::endl;
   std::cout<<"bit map: ";
@@ -104,6 +103,7 @@ void Module::ReadObjectFile(std::string object_file_name){
     std::cout<<"label: "<<usage_table_line->second<<" address: "<<usage_table_line->first<<std::endl;
   }
   std::cout<<std::endl;
+  */
 
   object_file.close();
 }

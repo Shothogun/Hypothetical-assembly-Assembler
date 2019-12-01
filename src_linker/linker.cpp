@@ -41,7 +41,7 @@ void Linker::Linking(){
     ConcatenatesObjectCodes();
     ResolveReferences();
     
-    /*Debug*/
+    /*Debug
     std::map<std::string, int>::iterator itr;
     std::map<int, std::string>::iterator itr2;
     std::vector<int>::iterator itr3;
@@ -64,7 +64,9 @@ void Linker::Linking(){
       std::cout<<*itr3<<" ";
     }
     std::cout<<std::endl;
+    */
   }
+  
   return;
 }
 
