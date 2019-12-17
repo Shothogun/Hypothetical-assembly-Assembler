@@ -5,7 +5,7 @@ A linker is also created to allow programs of up to two modules and generate an 
 
 ## Members
 
-Member                     | Univeristy Id
+Member                     | University Id
 ---------------------------|------------------
 Otho Teixeira Komatsu      | 170020142
 Danilo Inácio dos S. Silva | 170031861
